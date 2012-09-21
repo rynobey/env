@@ -15,8 +15,9 @@ classdef Project < handle
         function proj = Project(env, projectPath)
             proj.Env = env;
             proj.projectPath = projectPath;
-            proj.projectName = projectPath(find(projectPath == '\', 1, 'last') + 1: end);
-            cstPath = sprintf('%s\\%s.cst', proj.projectPath, proj.projectName);
+            proj.projectName = projectPath(find(projectPath == filesep, 1, 'last') + 1: end);
+            %cstPath = sprintf('%s\\%s.cst', proj.projectPath, proj.projectName);
+            cstPath = fullfile(proj.projectPath, sprintf('%s.cst', proj.projectName))
             if exist(proj.projectPath, 'dir') == 7 && exist(cstPath, 'file') == 2
                 proj.Open();
             elseif exist(proj.projectPath, 'dir') == 7 && exist(cstPath, 'file') ~= 2
@@ -63,13 +64,15 @@ classdef Project < handle
                         lines = sprintf('%s%s', lines, commands(startLine:endLine));
                         if length(find(double(lines) == 10)) >= maxNumLines || n == length(index)
                             headerTemp = sprintf('%s_%d', header, counter);
-                            proj.CSTProject.invoke('AddToHistory', headerTemp, lines);
+                            %proj.CSTProject.invoke('AddToHistory', headerTemp, lines);
+                            lines
                             lines = '';
                             counter = counter + 1;
                         end
                     end
                 else
-                    proj.CSTProject.invoke('AddToHistory', header, commands);
+                    %proj.CSTProject.invoke('AddToHistory', header, commands);
+                    commands
                 end
             end
         end
@@ -161,7 +164,7 @@ classdef Project < handle
             else
                 proj = env.FindByName(projectName);
             end
-            proj.updateLib();
+            %proj.updateLib();
         end
     end
 end

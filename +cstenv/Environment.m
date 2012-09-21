@@ -24,10 +24,11 @@ classdef Environment < handle
             env.path = cd;
         end
         function ConCST(env)
-            env.CST = actxserver('CSTStudio.Application');
+            %env.CST = actxserver('CSTStudio.Application');
         end
         function proj = Open(env, projectName)
-           projectPath = sprintf('%s\\%s', env.path, projectName);
+           projectPath = fullfile(env.path, projectName, '')
+           %projectPath = sprintf('%s\\%s', env.path, projectName);
            proj = cstenv.Project(env, projectPath);
            env.projects(end + 1) = proj;
         end
@@ -104,7 +105,8 @@ classdef Environment < handle
         function New(projectName)
             if exist(projectName, 'dir') ~= 7 && exist(projectName, 'file') ~= 2
                 env = cstenv.Environment.Start();
-                projectPath = sprintf('%s\\%s', env.path, projectName);
+                projectPath = fullfile(env.path, projectName, '')
+                %projectPath = sprintf('%s\\%s', env.path, projectName);
                 mkdir(projectPath);
                 
                 % generate empty project class file
