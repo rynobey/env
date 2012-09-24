@@ -64,14 +64,14 @@ classdef Project < handle
                         lines = sprintf('%s%s', lines, commands(startLine:endLine));
                         if length(find(double(lines) == 10)) >= maxNumLines || n == length(index)
                             headerTemp = sprintf('%s_%d', header, counter);
-                            %proj.CSTProject.invoke('AddToHistory', headerTemp, lines);
+                            proj.CSTProject.invoke('AddToHistory', headerTemp, lines);
                             lines
                             lines = '';
                             counter = counter + 1;
                         end
                     end
                 else
-                    %proj.CSTProject.invoke('AddToHistory', header, commands);
+                    proj.CSTProject.invoke('AddToHistory', header, commands);
                     commands
                 end
             end

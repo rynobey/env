@@ -24,7 +24,7 @@ classdef Environment < handle
             env.path = cd;
         end
         function ConCST(env)
-            %env.CST = actxserver('CSTStudio.Application');
+            env.CST = actxserver('CSTStudio.Application');
         end
         function proj = Open(env, projectName)
            projectPath = fullfile(env.path, projectName, '')
