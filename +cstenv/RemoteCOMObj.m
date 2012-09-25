@@ -26,7 +26,7 @@ classdef RemoteCOMObj < handle
         scriptCode = sprintf('Set %s = %s.%s "%s"', projName, o.objVarName, cmd, fileName);
         msg = renv.Message.New('VBScript', scriptCode);
         o.remote.Send(msg);
-        newO = cstenv.RemoteCOMObj(fileName, o.remote);
+        newO = cstenv.RemoteCOMObj(projName, o.remote);
       elseif strcmp(cmd, 'NewMWS')
         scriptCode = sprintf('Set tempNewProj = %s.%s', o.objVarName, cmd);
         msg = renv.Message.New('VBScript', scriptCode);
@@ -54,14 +54,15 @@ classdef RemoteCOMObj < handle
         scriptCode = sprintf('%s.%s', o.objVarName, cmd);
         counter = 1;
         for n = 1:length(varargin)
+          arg = strrep(varargin{n}, '"', '""');
+          arg = strrep(arg, sprintf('\n'), '" & vbNewLine & "');
           if counter == 1
-            scriptCode = sprintf('%s "%s"', scriptCode, varargin{n});
+            scriptCode = sprintf('%s "%s"', scriptCode, arg);
           else
-            scriptCode = sprintf('%s, "%s"', scriptCode, varargin{n});
+            scriptCode = sprintf('%s, "%s"', scriptCode, arg);
           end
           counter = counter + 1;
         end
-        scriptCode
         msg = renv.Message.New('VBScript', scriptCode);
         o.remote.Send(msg);
         newO = '';
@@ -72,6 +73,8 @@ classdef RemoteCOMObj < handle
       msg = renv.Message.New('VBScript', scriptCode);
       o.remote.Send(msg);
       newO = cstenv.RemoteCOMObj(objName, o.remote);
+    end
+    function release(o)
     end
   end
 

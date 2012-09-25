@@ -9,6 +9,7 @@ classdef Remote < handle
     function rem = Remote(hostIP, hostPort)
       rem.hostIP = hostIP;
       rem.hostPort = hostPort;
+      profile on;
     end
     function response = Send(rem, msgArr)
       %function imports

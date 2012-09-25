@@ -3,6 +3,7 @@ classdef Environment < handle
   properties
       CST = [];
       path = [];
+      remotePath = [];
       projects = cstenv.Project.empty(1,0);
   end
 
@@ -25,17 +26,18 @@ classdef Environment < handle
       appName = 'CSTStudio.Application';
       try
         env.CST = actxserver(appName);
+        env.remotePath = env.path;
       catch
-        r = renv.Remote('192.168.1.202', 8000);
+        r = renv.Remote('192.168.1.104', 8000);
         env.CST = cstenv.RemoteCOMObj('CST', r);
         scriptCode = sprintf('Set %s = CreateObject("%s")', 'CST', appName);
         msg = renv.Message.New('VBScript', scriptCode);
         r.Send(msg);
+        env.remotePath = 'C:\\Users\ryno\renv';
       end
     end
     function proj = Open(env, projectName)
        projectPath = fullfile(env.path, projectName, '')
-       %projectPath = sprintf('%s\\%s', env.path, projectName);
        proj = cstenv.Project(env, projectPath);
        env.projects(end + 1) = proj;
     end

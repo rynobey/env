@@ -16,13 +16,12 @@ classdef Project < handle
             proj.Env = env;
             proj.projectPath = projectPath;
             proj.projectName = projectPath(find(projectPath == filesep, 1, 'last') + 1: end);
-            %cstPath = sprintf('%s\\%s.cst', proj.projectPath, proj.projectName);
-            %cstPath = fullfile(proj.projectPath, sprintf('%s.cst', proj.projectName))
-            cstPath = sprintf('%s.cst', proj.projectName);
+            cstPath = sprintf('%s\\%s.cst', proj.Env.remotePath, proj.projectName);
             if exist(proj.projectPath, 'dir') == 7 && exist(cstPath, 'file') == 2
                 proj.Open();
             elseif exist(proj.projectPath, 'dir') == 7 && exist(cstPath, 'file') ~= 2
                 proj.New();                
+       %projectPath = sprintf('%s\\%s', env.path, projectName);
             elseif exist(proj.projectPath, 'dir') ~= 7
                 disp('ERROR: Project folder does not exist!');
             end
@@ -33,7 +32,7 @@ classdef Project < handle
         function Clean(proj)
             try
                 proj.CSTProject.invoke('FileNew');
-                filePath = sprintf('%s\\%s%s', proj.projectPath, proj.projectName, '.cst');
+                filePath = sprintf('%s\\%s.cst', proj.Env.remotePath, proj.projectName);
                 proj.CSTProject.invoke('SaveAs', filePath, 'False');
             end
         end
@@ -82,7 +81,7 @@ classdef Project < handle
         end
         function Save(proj)
             try
-                filePath = sprintf('%s\\%s%s', proj.projectPath, proj.projectName, '.cst');
+                filePath = sprintf('%s\\%s.cst', proj.Env.remotePath, proj.projectName);
                 proj.CSTProject.invoke('SaveAs', filePath, 'False');
             end
         end
@@ -101,7 +100,7 @@ classdef Project < handle
     methods (Hidden)
         function Open(proj)
             try
-                filePath = sprintf('%s\\%s%s', proj.projectPath, proj.projectName, '.cst');
+                filePath = sprintf('%s\\%s.cst', proj.Env.remotePath, proj.projectName);
                 proj.CSTProject = proj.Env.CST.invoke('OpenFile', filePath);
                 proj.CSTProject.invoke('Save');
             catch e
@@ -112,8 +111,7 @@ classdef Project < handle
         end
         function New(proj)
             try
-                %filePath = sprintf('%s\\%s%s', proj.projectPath, proj.projectName, '.cst');
-                filePath = sprintf('%s.cst', proj.projectName);
+                filePath = sprintf('%s\\%s.cst', proj.Env.remotePath, proj.projectName);
                 proj.CSTProject = proj.Env.CST.invoke('NewMWS');
                 proj.CSTProject.invoke('SaveAs', filePath, 'False');
             catch e
@@ -124,14 +122,14 @@ classdef Project < handle
         end
         function updateLib(proj)
             % copy library into "Includes" folder of CST
-            sourceFilePath = sprintf('%s\\+cstenv\\+scripts\\envlib.lib', proj.Env.path);
+            sourceFilePath = sprintf('%s\\+cstenv\\+scripts\\envlib.lib', proj.Env.remotePath);
             installPath = proj.CSTProject.invoke('GetInstallPath');
             destFolderPath = sprintf('%s\\Library\\Includes\\', installPath);
             copyfile(sourceFilePath, destFolderPath, 'f');
         end
         function delete(proj) % called when this object is destroyed
             try
-                filePath = sprintf('%s\\%s%s', proj.projectPath, proj.projectName, '.cst');
+                filePath = sprintf('%s\\%s.cst', proj.Env.remotePath, proj.projectName);
                 proj.CSTProject.invoke('SaveAs', filePath, 'False');
                 proj.CSTProject.invoke('Quit');
                 for n = 1:length(proj.COMObjectArr)
@@ -150,6 +148,18 @@ classdef Project < handle
                     obj = proj.COMObjectArr{n};
                     break;
                 end
+            end
+            if length(obj) == 0
+              for n = 1:length(proj.COMObjectArr)
+                name = '';
+                try
+                  name = proj.COMObjectArr{n}.objVarName;
+                end
+                if strcmp(name, objName)
+                  obj = proj.COMObjectArr{n};
+                  break;
+                end
+              end
             end
         end
     end
