@@ -27,7 +27,15 @@ classdef Project < handle
             end
         end
         function Close(proj)
-            proj.delete();
+            try
+                filePath = sprintf('%s\\%s.cst', proj.Env.remotePath, proj.projectName);
+                proj.CSTProject.invoke('SaveAs', filePath, 'False');
+                proj.CSTProject.invoke('Quit');
+                for n = 1:length(proj.COMObjectArr)
+                    proj.COMObjectArr{n}.release();
+                end
+                proj.CSTProject.release();
+            end
         end
         function Clean(proj)
             try
@@ -129,9 +137,6 @@ classdef Project < handle
         end
         function delete(proj) % called when this object is destroyed
             try
-                filePath = sprintf('%s\\%s.cst', proj.Env.remotePath, proj.projectName);
-                proj.CSTProject.invoke('SaveAs', filePath, 'False');
-                proj.CSTProject.invoke('Quit');
                 for n = 1:length(proj.COMObjectArr)
                     proj.COMObjectArr{n}.release();
                 end

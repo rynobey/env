@@ -1,0 +1,32 @@
+' userdefined watch for parameter sweep
+
+Option Explicit
+
+Sub ParameterSweepWatch(action As Integer)
+
+	'Please define actions for the parameter sweep watch here.
+
+	Select Case action
+		Case 0
+		'Please define actions before the parametersweep starts.
+        RunScript("D:\ryno\Documents\2012\Uni\m\cstmat\+cstenv\+scripts\paramSweepBefore.bas")
+
+		Case 1
+		'Please define actions after each calculation.
+        RunScript("D:\ryno\Documents\2012\Uni\m\cstmat\+cstenv\+scripts\paramSweepEach.bas")
+
+		Case 2
+		'Please define actions after the parametersweep has finished.
+        RunScript("D:\ryno\Documents\2012\Uni\m\cstmat\+cstenv\+scripts\paramSweepAfter.bas")
+
+	End Select
+
+End Sub
+
+Sub Main()
+
+  ParameterSweepWatch 0
+  ParameterSweepWatch 1
+  ParameterSweepWatch 2
+
+End Sub

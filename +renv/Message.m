@@ -66,7 +66,7 @@ classdef Message < handle
       if length(varargin) > 0
         params = varargin{1};
         for n = 2:length(varargin)
-          params = sprintf('%s;%s', params, varargin{n})
+          params = sprintf('%s;%s', params, varargin{n});
         end
         msg.SetNodeText('Params', params);
       end

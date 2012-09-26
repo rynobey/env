@@ -1,5 +1,2 @@
-# exclude all files
-*.*
-# except the files contained in these (package) folders
-!+cstenv\*
-!+renv\*
+*.swp
+*.asv
