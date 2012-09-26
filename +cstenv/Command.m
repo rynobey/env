@@ -28,7 +28,7 @@ classdef Command < handle
         end
         function text = ToVBS(cmd)
           text = '';
-          for nn = 1:size(cmd(, 2))
+          for nn = 1:size(cmd, 2)
             if strcmp(cmd(nn).objectName, 'CST') == 1
             elseif strcmp(cmd(nn).objectName, 'Project') == 1
             else
@@ -49,15 +49,15 @@ classdef Command < handle
                     end
                 else
                     if c1 || c2 || c3
-                        text = sprintf('%s \n%s', text, cmd(nn).commandName);
+                        text = sprintf('%s :%s', text, cmd(nn).commandName);
                     else
-                        text = sprintf('%s \n%s.%s', text, cmd(nn).objectName, cmd(nn).commandName);
+                        text = sprintf('%s :%s.%s', text, cmd(nn).objectName, cmd(nn).commandName);
                     end
                 end
                 if length(cmd(nn).arguments) > 0 %#ok<ISMT>
-                    text = sprintf('%s "%s"', text, cmd(nn).arguments{1});
+                    text = sprintf('%s ""%s""', text, cmd(nn).arguments{1});
                     for n = 2:length(cmd(nn).arguments)
-                        text = sprintf('%s, "%s"', text, cmd(nn).arguments{n});
+                        text = sprintf('%s, ""%s""', text, cmd(nn).arguments{n});
                     end
                 end
             end

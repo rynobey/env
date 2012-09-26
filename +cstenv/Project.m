@@ -17,7 +17,8 @@ classdef Project < handle
             proj.projectPath = projectPath;
             proj.projectName = projectPath(find(projectPath == filesep, 1, 'last') + 1: end);
             %cstPath = sprintf('%s\\%s.cst', proj.projectPath, proj.projectName);
-            cstPath = fullfile(proj.projectPath, sprintf('%s.cst', proj.projectName))
+            %cstPath = fullfile(proj.projectPath, sprintf('%s.cst', proj.projectName))
+            cstPath = sprintf('%s.cst', proj.projectName);
             if exist(proj.projectPath, 'dir') == 7 && exist(cstPath, 'file') == 2
                 proj.Open();
             elseif exist(proj.projectPath, 'dir') == 7 && exist(cstPath, 'file') ~= 2
@@ -65,14 +66,12 @@ classdef Project < handle
                         if length(find(double(lines) == 10)) >= maxNumLines || n == length(index)
                             headerTemp = sprintf('%s_%d', header, counter);
                             proj.CSTProject.invoke('AddToHistory', headerTemp, lines);
-                            lines
                             lines = '';
                             counter = counter + 1;
                         end
                     end
                 else
                     proj.CSTProject.invoke('AddToHistory', header, commands);
-                    commands
                 end
             end
         end
@@ -113,7 +112,8 @@ classdef Project < handle
         end
         function New(proj)
             try
-                filePath = sprintf('%s\\%s%s', proj.projectPath, proj.projectName, '.cst');
+                %filePath = sprintf('%s\\%s%s', proj.projectPath, proj.projectName, '.cst');
+                filePath = sprintf('%s.cst', proj.projectName);
                 proj.CSTProject = proj.Env.CST.invoke('NewMWS');
                 proj.CSTProject.invoke('SaveAs', filePath, 'False');
             catch e
