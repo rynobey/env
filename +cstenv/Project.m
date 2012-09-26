@@ -18,7 +18,7 @@ classdef Project < handle
             proj.projectName = projectPath(find(projectPath == filesep, 1, 'last') + 1: end);
             cstPath = sprintf('%s\\%s.cst', proj.Env.remotePath, proj.projectName);
             if exist(proj.projectPath, 'dir') == 7 && exist(cstPath, 'file') == 2
-                proj.Open();
+                proj.New();
             elseif exist(proj.projectPath, 'dir') == 7 && exist(cstPath, 'file') ~= 2
                 proj.New();                
        %projectPath = sprintf('%s\\%s', env.path, projectName);

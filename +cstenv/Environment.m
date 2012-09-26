@@ -25,19 +25,19 @@ classdef Environment < handle
     function ConCST(env)
       appName = 'CSTStudio.Application';
       try
-        env.CST = actxserver(appName);
-        env.remotePath = env.path;
-      catch
-        r = renv.Remote('192.168.1.104', 8000);
+        %env.CST = actxserver(appName);
+        %env.remotePath = env.path;
+      %catch
+        r = renv.Remote('ee430030.ee.sun.ac.za', 8000);
         env.CST = cstenv.RemoteCOMObj('CST', r);
         scriptCode = sprintf('Set %s = CreateObject("%s")', 'CST', appName);
         msg = renv.Message.New('VBScript', scriptCode);
         r.Send(msg);
-        env.remotePath = 'C:\\Users\ryno\renv';
+        env.remotePath = 'D:\\ftproot\work\Backup\Ryno\m\renv';
       end
     end
     function proj = Open(env, projectName)
-       projectPath = fullfile(env.path, projectName, '')
+       projectPath = fullfile(env.path, projectName, '');
        proj = cstenv.Project(env, projectPath);
        env.projects(end + 1) = proj;
     end
