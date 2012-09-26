@@ -26,17 +26,29 @@ classdef Command < handle
                 disp(sprintf('In Command.Execute: %s', e.message));
             end
         end
+        function text = ToVBS(cmd)
+          text = '';
+          for nn = 1:size(cmd(, 2))
+            if strcmp(cmd(nn).objectName, 'CST') == 1
+            elseif strcmp(cmd(nn).objectName, 'Project') == 1
+            else
+            end
+          end
+        end
         function text = ToVBA(cmd)
             text = '';
             for nn = 1:size(cmd, 2)
+                c1 = strcmp(cmd(nn).objectName, '');
+                c2 = strcmp(cmd(nn).objectName, 'Project');
+                c3 = strcmp(cmd(nn).objectName, 'CST');
                 if nn == 1
-                    if strcmp(cmd(nn).objectName, '')
+                    if c1 || c2 || c3
                         text = sprintf('%s', cmd(nn).commandName);
                     else
                         text = sprintf('%s.%s', cmd(nn).objectName, cmd(nn).commandName);
                     end
                 else
-                    if strcmp(cmd(nn).objectName, '')
+                    if c1 || c2 || c3
                         text = sprintf('%s \n%s', text, cmd(nn).commandName);
                     else
                         text = sprintf('%s \n%s.%s', text, cmd(nn).objectName, cmd(nn).commandName);
