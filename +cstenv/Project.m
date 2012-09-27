@@ -12,36 +12,33 @@ classdef Project < handle
     end
     
     methods
-        function proj = Project(env, projectPath)
+        function proj = Project(env, projectName)
             proj.Env = env;
-            proj.projectPath = projectPath;
-            proj.projectName = projectPath(find(projectPath == filesep, 1, 'last') + 1: end);
-            cstPath = sprintf('%s\\%s.cst', proj.Env.remotePath, proj.projectName);
-            if exist(proj.projectPath, 'dir') == 7 && exist(cstPath, 'file') == 2
+            proj.projectPath = fullfile(env.path, projectName, '');
+            proj.projectName = projectName;
+            cstPath = sprintf('%s\\%s\\%s.cst', proj.Env.remotePath, proj.projectName, proj.projectName);
+            msg = renv.Message.New('FileExists', cstPath);
+            if exist(proj.projectPath, 'dir') == 7 && strcmp(env.remote.Request(msg).Msg, 'True')
+                proj.Open();
+            elseif exist(proj.projectPath, 'dir') == 7 && strcmp(env.remote.Request(msg).Msg, 'False')
                 proj.New();
-            elseif exist(proj.projectPath, 'dir') == 7 && exist(cstPath, 'file') ~= 2
-                proj.New();                
-       %projectPath = sprintf('%s\\%s', env.path, projectName);
             elseif exist(proj.projectPath, 'dir') ~= 7
                 disp('ERROR: Project folder does not exist!');
             end
         end
         function Close(proj)
             try
-                filePath = sprintf('%s\\%s.cst', proj.Env.remotePath, proj.projectName);
-                proj.CSTProject.invoke('SaveAs', filePath, 'False');
+                cstPath = sprintf('%s\\%s\\%s.cst', proj.Env.remotePath, proj.projectName, proj.projectName);
+                proj.CSTProject.invoke('SaveAs', cstPath, 'False');
                 proj.CSTProject.invoke('Quit');
-                for n = 1:length(proj.COMObjectArr)
-                    proj.COMObjectArr{n}.release();
-                end
-                proj.CSTProject.release();
+                proj.delete();
             end
         end
         function Clean(proj)
             try
                 proj.CSTProject.invoke('FileNew');
-                filePath = sprintf('%s\\%s.cst', proj.Env.remotePath, proj.projectName);
-                proj.CSTProject.invoke('SaveAs', filePath, 'False');
+                cstPath = sprintf('%s\\%s\\%s.cst', proj.Env.remotePath, proj.projectName, proj.projectName);
+                proj.CSTProject.invoke('SaveAs', cstPath, 'False');
             end
         end
         function Reset(proj)
@@ -89,8 +86,8 @@ classdef Project < handle
         end
         function Save(proj)
             try
-                filePath = sprintf('%s\\%s.cst', proj.Env.remotePath, proj.projectName);
-                proj.CSTProject.invoke('SaveAs', filePath, 'False');
+                cstPath = sprintf('%s\\%s\\%s.cst', proj.Env.remotePath, proj.projectName, proj.projectName);
+                proj.CSTProject.invoke('SaveAs', cstPath, 'False');
             end
         end
         function obj = GetCOMObj(proj, objName)
@@ -108,8 +105,8 @@ classdef Project < handle
     methods (Hidden)
         function Open(proj)
             try
-                filePath = sprintf('%s\\%s.cst', proj.Env.remotePath, proj.projectName);
-                proj.CSTProject = proj.Env.CST.invoke('OpenFile', filePath);
+                cstPath = sprintf('%s\\%s\\%s.cst', proj.Env.remotePath, proj.projectName, proj.projectName);
+                proj.CSTProject = proj.Env.CST.invoke('OpenFile', cstPath);
                 proj.CSTProject.invoke('Save');
             catch e
                 proj.CSTProject = [];
@@ -119,9 +116,9 @@ classdef Project < handle
         end
         function New(proj)
             try
-                filePath = sprintf('%s\\%s.cst', proj.Env.remotePath, proj.projectName);
+                cstPath = sprintf('%s\\%s\\%s.cst', proj.Env.remotePath, proj.projectName, proj.projectName);
                 proj.CSTProject = proj.Env.CST.invoke('NewMWS');
-                proj.CSTProject.invoke('SaveAs', filePath, 'False');
+                proj.CSTProject.invoke('SaveAs', cstPath, 'False');
             catch e
                 proj.CSTProject = [];
                 disp(sprintf('Error opening project: %s', e.message));
@@ -130,10 +127,10 @@ classdef Project < handle
         end
         function updateLib(proj)
             % copy library into "Includes" folder of CST
-            sourceFilePath = sprintf('%s\\+cstenv\\+scripts\\envlib.lib', proj.Env.remotePath);
+            sourceFilePath = sprintf('%s\\+cstenv\\+scripts\\envlib.lib', proj.Env.path);
             installPath = proj.CSTProject.invoke('GetInstallPath');
             destFolderPath = sprintf('%s\\Library\\Includes\\', installPath);
-            copyfile(sourceFilePath, destFolderPath, 'f');
+            proj.Env.remote.Upload(sourceFilePath, destFolderPath);
         end
         function delete(proj) % called when this object is destroyed
             try
@@ -142,6 +139,7 @@ classdef Project < handle
                 end
                 proj.CSTProject.release();
             end
+            proj.Env.removeFromList(proj.projectName);
         end
         function obj = FindCOMObjByName(proj, objName)
             obj = [];
@@ -179,7 +177,7 @@ classdef Project < handle
             else
                 proj = env.FindByName(projectName);
             end
-            %proj.updateLib();
+            proj.updateLib();
         end
     end
 end

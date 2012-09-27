@@ -183,12 +183,12 @@ classdef Remote < handle
         rem.remoteWD = 'D:\\ryno\Documents\2012\Uni\m\simwd';
       elseif strcmp(rem.hostName, 'ee423328.ee.sun.ac.za')
         % running cst on tusker
-        rem.ftpRoot = 'D:\\ftproot\work\Backup\Ryno\ftpTemp';
+        rem.remoteFtp = 'D:\\ftproot\work\Backup\Ryno\ftpTemp';
         rem.ftpTemp = '/Backup/Ryno/ftpTemp';
         rem.remoteWD = 'D:\\ftproot\work\Backup\Ryno\simwd';
       elseif strcmp(rem.hostName, 'ee430030.ee.sun.ac.za')
         % running cst on marvin
-        rem.ftpRoot = 'D:\\ftproot\work\Ryno\ftpTemp';
+        rem.remoteFtp = 'D:\\ftproot\work\Ryno\ftpTemp';
         rem.ftpTemp = '/Ryno/ftpTemp';
         rem.remoteWD = 'D:\\ftproot\work\Ryno\simwd';
       elseif strcmp(rem.hostName, '192.168.1.104')

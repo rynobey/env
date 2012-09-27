@@ -23,7 +23,7 @@ classdef RemoteCOMObj < handle
         if find(projName == '.', 1)
           projName = projName(1:find(projName == '.', 1, 'last') - 1);
         end
-        scriptCode = sprintf('Set %s = %s.%s "%s"', projName, o.objVarName, cmd, fileName);
+        scriptCode = sprintf('Set %s = %s.%s ("%s")', projName, o.objVarName, cmd, fileName);
         msg = renv.Message.New('VBScript', scriptCode);
         o.remote.Send(msg);
         newO = cstenv.RemoteCOMObj(projName, o.remote);
@@ -45,23 +45,33 @@ classdef RemoteCOMObj < handle
           projName = projName(1:find(projName == '.', 1, 'last') - 1);
         end
         scriptCode = sprintf('%s.%s "%s", "%s"', o.objVarName, cmd, fileName, varargin{2});
-        scriptCode = sprintf('%s:Set %s = %s', scriptCode, projName, 'tempNewProj');
+        scriptCode = sprintf('%s:Set %s = %s:Set %s = Nothing', scriptCode, projName, 'tempNewProj', 'tempNewProj');
         msg = renv.Message.New('VBScript', scriptCode);
         o.remote.Send(msg);
         newO = '';
         o.objVarName = projName;
+      elseif strcmp(cmd, 'GetInstallPath')
+          scriptCode = sprintf('%s.GetInstallPath', o.objVarName);
+          msg = renv.Message.New('GetValue', scriptCode);
+          newO = o.remote.Request(msg).Msg.toCharArray();
       else
         scriptCode = sprintf('%s.%s', o.objVarName, cmd);
         counter = 1;
-        for n = 1:length(varargin)
-          arg = strrep(varargin{n}, '"', '""');
-          arg = strrep(arg, sprintf('\n'), '" & vbNewLine & "');
-          if counter == 1
-            scriptCode = sprintf('%s "%s"', scriptCode, arg);
-          else
-            scriptCode = sprintf('%s, "%s"', scriptCode, arg);
-          end
-          counter = counter + 1;
+        if length(varargin) == 1
+            arg = strrep(varargin{1}, '"', '""');
+            arg = strrep(arg, sprintf('\n'), '" & vbNewLine & "');
+            scriptCode = sprintf('%s ("%s")', scriptCode, arg);
+        else
+            for n = 1:length(varargin)
+              arg = strrep(varargin{n}, '"', '""');
+              arg = strrep(arg, sprintf('\n'), '" & vbNewLine & "');
+              if counter == 1
+                scriptCode = sprintf('%s "%s"', scriptCode, arg);
+              else
+                scriptCode = sprintf('%s, "%s"', scriptCode, arg);
+              end
+              counter = counter + 1;
+            end
         end
         msg = renv.Message.New('VBScript', scriptCode);
         o.remote.Send(msg);

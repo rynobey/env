@@ -4,6 +4,7 @@ classdef Environment < handle
       CST = [];
       path = [];
       remotePath = [];
+      remote = [];
       projects = cstenv.Project.empty(1,0);
   end
 
@@ -28,19 +29,21 @@ classdef Environment < handle
         %env.CST = actxserver(appName);
         %env.remotePath = env.path;
       %catch
-        r = renv.Remote('192.168.1.104', 8000);
-        env.CST = cstenv.RemoteCOMObj('CST', r);
+        env.remote = renv.Remote('localhost', 8000);
+        env.CST = cstenv.RemoteCOMObj('CST', env.remote);
         scriptCode = sprintf('Set %s = CreateObject("%s")', 'CST', appName);
         msg = renv.Message.New('VBScript', scriptCode);
-        r.Send(msg);
-        env.remotePath = 'C:\\Users\ryno\renv';
-        %env.remotePath = 'D:\\ftproot\work\Backup\Ryno\m\renv';
+        env.remote.Send(msg);
+        env.remotePath = env.remote.remoteWD;
       end
     end
     function proj = Open(env, projectName)
-       projectPath = fullfile(env.path, projectName, '');
-       proj = cstenv.Project(env, projectPath);
-       env.projects(end + 1) = proj;
+        if ~(env.IsOpen(projectName))
+            proj = cstenv.Project(env, projectName);
+            env.projects(end + 1) = proj;
+        else
+            proj = env.FindByName(projectName);
+        end
     end
     function Close(env, projectName)
         if env.IsOpen(projectName)
@@ -80,6 +83,15 @@ classdef Environment < handle
             end
         end
     end
+    function removeFromList(env, projectName)
+        for n = 1:length(env.projects)
+            proj = env.projects(n);
+            if strcmp(proj.projectName, projectName)
+                env.projects(n) = [];
+                break;
+            end
+        end
+    end
     function val = IsOpen(env, projectName)
         val = 0;
         try
@@ -95,10 +107,14 @@ classdef Environment < handle
   end
   methods (Hidden)
     function delete(env)
-      for n = 1:length(env.projects)
-        env.projects(1).delete();
-      end
-      env.CST.release();
+        for n = 1:length(env.projects)
+            try
+                env.projects(n).delete();
+            end
+        end
+        try
+            env.CST.release();
+        end
     end
   end
   methods (Static)
@@ -113,10 +129,9 @@ classdef Environment < handle
       env = evalin('base', 'env;');
     end
     function New(projectName)
-      if exist(projectName, 'dir') ~= 7 && exist(projectName, 'file') ~= 2
+      if exist(projectName, 'dir') ~= 7 && exist(sprintf('%s.m', projectName), 'file') ~= 2
         env = cstenv.Environment.Start();
-        projectPath = fullfile(env.path, projectName, '')
-        %projectPath = sprintf('%s\\%s', env.path, projectName);
+        projectPath = fullfile(env.path, projectName, '');
         mkdir(projectPath);
         
         % generate empty project class file
