@@ -10,6 +10,7 @@ classdef RemoteCOMObj < handle
       o.remote = remote;
     end
     function newO = invoke(o, cmd, varargin)
+        disp(cmd)
       %new objects need to be created in some special cases
       if strcmp(cmd, 'OpenFile')
         fileName = varargin{1};
@@ -25,12 +26,12 @@ classdef RemoteCOMObj < handle
         end
         scriptCode = sprintf('Set %s = %s.%s ("%s")', projName, o.objVarName, cmd, fileName);
         msg = renv.Message.New('VBScript', scriptCode);
-        o.remote.Send(msg);
+        o.remote.Request(msg);
         newO = cstenv.RemoteCOMObj(projName, o.remote);
       elseif strcmp(cmd, 'NewMWS')
         scriptCode = sprintf('Set tempNewProj = %s.%s', o.objVarName, cmd);
         msg = renv.Message.New('VBScript', scriptCode);
-        o.remote.Send(msg);
+        o.remote.Request(msg);
         newO = cstenv.RemoteCOMObj('tempNewProj', o.remote);
       elseif strcmp(cmd, 'SaveAs')
         fileName = varargin{1};
@@ -81,7 +82,7 @@ classdef RemoteCOMObj < handle
     function newO = get(o, objName)
       scriptCode = sprintf('Set %s = %s.%s', objName, o.objVarName, objName);
       msg = renv.Message.New('VBScript', scriptCode);
-      o.remote.Send(msg);
+      o.remote.Request(msg);
       newO = cstenv.RemoteCOMObj(objName, o.remote);
     end
     function release(o)

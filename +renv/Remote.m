@@ -7,62 +7,94 @@ classdef Remote < handle
     remoteWD;
     remoteFtp;
     ftpObj;
+    msgArr = renv.Message.empty(1,0);
+    sendTimer;
+    rcvTimer;
+    schedTimer;
+    socket;
+    iStream;
+    dInputStream;
+    oStream;
+    dOutputStream;
   end
   
   methods
-    function rem = Remote(hostName, hostPort)
-      rem.hostName = hostName;
-      rem.hostPort = hostPort;
-      rem.loadConfig;
-      uname = input('FTP Username: ', 's');
-      pass = input('FTP Password: ', 's');
-      rem.ftpObj = ftp(rem.hostName, uname, pass);
-      cd(rem.ftpObj, rem.ftpTemp);
-    end
-    function response = Request(rem, msgArr)
-      %function imports
-      import java.io.*;
-      import java.net.Socket;
-      for n = 1:length(msgArr)
-        msg = msgArr(n);
+    function rem = Remote(hostName, hostPort)        
+        %function imports
+        import java.io.*;
+        import java.net.Socket;
+        rem.hostName = hostName;
+        rem.hostPort = hostPort;
+        rem.loadConfig;
+        %uname = input('FTP Username: ', 's');
+        uname = 'Ryno';
+        %pass = input('FTP Password: ', 's');
+        pass = 'ftppass';
+        rem.ftpObj = ftp(rem.hostName, uname, pass);
+        cd(rem.ftpObj, rem.ftpTemp);
+        rem.sendTimer = timer('StartDelay', 0, 'BusyMode', 'queue', ...
+            'ExecutionMode', 'fixedSpacing', 'TasksToExecute', 1);
+        rem.rcvTimer = timer('StartDelay', 0, 'BusyMode', 'queue', ...
+            'ExecutionMode', 'fixedSpacing', 'TasksToExecute', 1);
+        rem.schedTimer = timer('StartDelay', 0.5, 'BusyMode', 'queue', ...
+            'ExecutionMode', 'fixedSpacing', 'TasksToExecute', 1);
+        rem.setupTimer;
         %connect to the socket host
-        socket = Socket(rem.hostName, rem.hostPort);
-        %get data io streams
-        iStream   = socket.getInputStream;
-        dInputStream = DataInputStream(iStream);
-        oStream   = socket.getOutputStream;
-        dOutputStream = DataOutputStream(oStream);
-        %send data
-        commandText = msg.GetRawXML;
-        dOutputStream.writeBytes(char(commandText));
-        dOutputStream.flush;
-        %get response data
-        NBytes = iStream.available;
+        try
+            rem.socket = Socket(rem.hostName, rem.hostPort);
+            rem.socket.setSendBufferSize(8192000);
+            %get data io streams
+            rem.iStream   = rem.socket.getInputStream;
+            rem.dInputStream = DataInputStream(rem.iStream);
+            rem.oStream   = rem.socket.getOutputStream;
+            rem.dOutputStream = DataOutputStream(rem.oStream);
+        catch
+            disp('Unable to connect to server!');
+        end
+    end
+    function setupTimer(rem)        
+        %rem.sendTimer.StartFcn = @(x,y)disp('Send Timer started!');
+        rem.sendTimer.TimerFcn = {@SendCallback, rem};
+        rem.sendTimer.StopFcn = {@SetupSchedTimer, 'Send', rem};
+        start(rem.sendTimer);
+    end
+    function Send(rem, msg)
+        wait(rem.sendTimer);
+        rem.msgArr{end + 1} = msg;
+    end
+    function response = Request(rem, msg)
+        rem.stopTimers;
+        ReceiveCallback([], [], rem);
+        commandText = '<Tx>';
+        commandText = sprintf('%s\n%s', commandText, msg.GetRawXML);
+        commandText = sprintf('%s\n%s', commandText, '</Tx>');
+        rem.dOutputStream.writeBytes(char(commandText));
+        rem.dOutputStream.flush;
+        %wait(rem.rcvTimer);
+        NBytes = rem.iStream.available;
         while NBytes == 0
             pause(0.1);
-            NBytes = iStream.available;
+            NBytes = rem.iStream.available;
         end
         RawResponse = zeros(1, NBytes, 'uint8');
         for i = 1:NBytes
-            RawResponse(i) = dInputStream.readByte;
-        end
-        RawResponse = char(RawResponse(41:end));
-        response(n) = renv.Message(RawResponse);
-        c1 = strcmp(response(n).Msg, 'True');
-        c2 = strcmp(response(n).Msg, 'False');
-        if ~(strcmp(response(n).Msg, '') == 1) && c1 && c2
-          disp(response(n).Msg)
-        end
-        %release objects / cleanup
-        iStream.close;
-        dInputStream.close;
-        dOutputStream.flush;
-        oStream.close;
-        dOutputStream.close;
-        socket.close;
-      end
+            byte = rem.dInputStream.readByte;
+            if byte ~= 0
+                RawResponse(i) =  byte;
+                c1 = length(strfind(char(RawResponse(41:end)), '<Message'));
+                c2 = length(strfind(char(RawResponse(41:end)), '</Message>'));
+                c3 = length(strfind(char(RawResponse(41:end)), '<Message/>'));
+                c4 = length(strfind(char(RawResponse(41:end)), '<Message />'));
+                if (c1 > 0 && c2 > 0) || c3 > 0 || c4 > 0
+                    response = renv.Message(char(RawResponse(41:end)));
+                    disp(response.Msg);
+                    break;
+                end
+            end
+        end            
+        rem.setupTimer;
     end
-    function Send(rem, msgArr)
+    function ASend(rem, msgArr)
       %function imports
       import java.io.*;
       import java.net.Socket;
@@ -173,6 +205,29 @@ classdef Remote < handle
       msg = renv.Message.New('ListWorkers');
       disp(rem.Request(msg).Msg);
     end
+    function stopTimers(rem) 
+        wait(rem.sendTimer);
+        stop(rem.schedTimer);
+        stop(rem.sendTimer);
+        stop(rem.rcvTimer);
+    end
+    function delete(rem)
+        rem.stopTimers();
+        try
+            delete(rem.sendTimer);
+            delete(rem.rcvTimer);
+            delete(rem.schedTimer);
+        end
+        %release objects / cleanup
+        rem.socket.shutdownInput;
+        rem.socket.shutdownOutput;
+        rem.iStream.close;
+        rem.dInputStream.close;
+        rem.dOutputStream.flush;
+        rem.oStream.close;
+        rem.dOutputStream.close;
+        rem.socket.close;
+    end
   end
   methods (Hidden)
     function loadConfig(rem)
@@ -204,5 +259,5 @@ classdef Remote < handle
       end
     end
   end
-
+  
 end

@@ -115,6 +115,7 @@ classdef Environment < handle
         try
             env.CST.release();
         end
+        env.remote.delete();
     end
   end
   methods (Static)

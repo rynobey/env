@@ -127,7 +127,7 @@ classdef Project < handle
         end
         function updateLib(proj)
             % copy library into "Includes" folder of CST
-            sourceFilePath = sprintf('%s\\+cstenv\\+scripts\\envlib.lib', proj.Env.path);
+            sourceFilePath = sprintf('%s\\env\\+cstenv\\+scripts\\exports.lib', proj.Env.path);
             installPath = proj.CSTProject.invoke('GetInstallPath');
             destFolderPath = sprintf('%s\\Library\\Includes\\', installPath);
             proj.Env.remote.Upload(sourceFilePath, destFolderPath);
@@ -177,7 +177,7 @@ classdef Project < handle
             else
                 proj = env.FindByName(projectName);
             end
-            proj.updateLib();
+            %proj.updateLib();
         end
     end
 end
