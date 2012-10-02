@@ -6,9 +6,11 @@ classdef Message < handle
     Params;
     Msg;
   end
+
   properties (Hidden)
     XMLDoc;
   end
+
   methods
     function msg = Message(RawXML)
       if strcmp(RawXML, '') == 1
@@ -43,14 +45,15 @@ classdef Message < handle
       RawXML = XML(40:end);
     end
   end
+
   methods (Hidden)
     function nodeText = GetNodeText(msg, nodeName)
-        nodeList = msg.XMLDoc.getElementsByTagName(nodeName);
-        if nodeList.getLength() > 0
-            nodeText = nodeList.item(0).getTextContent;
-        else
-            nodeText = '';
-        end
+      nodeList = msg.XMLDoc.getElementsByTagName(nodeName);
+      if nodeList.getLength() > 0
+        nodeText = nodeList.item(0).getTextContent;
+      else
+        nodeText = '';
+      end
     end
     function updateProperties(msg)
       msg.Success = msg.GetNodeText('Success');
@@ -59,6 +62,7 @@ classdef Message < handle
       msg.Msg = msg.GetNodeText('Msg');
     end
   end
+
   methods (Static)
     function msg = New(cmd, varargin)
       msg = renv.Message('');

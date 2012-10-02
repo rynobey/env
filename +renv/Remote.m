@@ -63,7 +63,7 @@ classdef Remote < handle
     end
     function response = Request(rem, msg)
         rem.stopTimers;
-        ReceiveCallback([], [], rem);
+        renv.ReceiveCallback([], [], rem);
         commandText = '<Tx>';
         commandText = sprintf('%s\n%s', commandText, msg.GetRawXML);
         commandText = sprintf('%s\n%s', commandText, '</Tx>');
