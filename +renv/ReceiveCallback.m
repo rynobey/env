@@ -14,7 +14,12 @@ function ReceiveCallback(obj, event, rem)
                 c4 = length(strfind(char(RawResponse(41:end)), '<Message />'));
                 if (c1 > 0 && c2 > 0) || c3 > 0 || c4 > 0
                     response = renv.Message(char(RawResponse(41:end)));
-                    disp(response.Msg);
+                    d1 = strcmp(response.Msg, 'True');
+                    d2 = strcmp(response.Msg, 'False');
+                    d3 = strcmp(response.Msg, '');
+                    if ~(d1 || d2 || d3) || (response.Success == 0)
+                      disp(response.Msg);
+                    end
                 end
             end
         end    

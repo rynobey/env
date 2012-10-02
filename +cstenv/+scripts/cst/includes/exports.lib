@@ -1,42 +1,76 @@
-Function AppendSParams()
-    CreateDirs("results")
-    root = "1D Results\S-Parameters"
-    SelectTreeItem(root)    
-    Set Dictionary = CreateObject("Scripting.Dictionary")
-    Set Dictionary = TraverseResultTree(root, Dictionary)
-    for each treePath in Dictionary
-        dataFile = ResultTree.GetFileFromItemName(treePath)
-        dataFile = Right(dataFile, Len(dataFile)-inStrRev(dataFile, "\"))
-        dataFile = Left(dataFile, Len(dataFile)-Len(".sig"))
-        Set Result = Result1DComplex(dataFile)
-        arrY = Result1DComplexYToCSV(Result)
-        fileName = dataFile & ".csv"
-        file = FreeFile
-        Open "results\" & fileName For Append As #file
-        Print #file, arrY
-        Close #file
-    Next
-End Function
+'NOTE: REMOVE THE "OPTION EXPLICIT" LINE FROM ALL CALLING SCRIPTS/MACROS
 
-Function AppendParameterSet()
-    CreateDirs("results")
-    text = ""
-    numParams = GetNumberOfParameters()
-    for n = 0 to numParams-1 Step 1
-        k = GetParameterName(n)
-        v = GetParameterNValue(n)
-        text = text & vbNewLine & "if exist('" & k & "','var') == 0; " 
-        text = text & k & " = " & v & "; else " & k & "(end+1) = " & v & "; end;"
-    Next
-    fileName = "Parameters.m"
-    file = FreeFile
-    Open "results\" & fileName For Append As #file
-    Print #file, text
-    Close #file
-End Function
+'This file contains some library functions for exporting result data to comma separated formatted files (.csv).
+'The functions append one set of results to their (automatically generated) corresponding files when called.
+'The default location where the results are exported to is the "csv_exports" directory inside the directory containing the project.
 
-Function AppendFrequency()
-    CreateDirs("results")
+'INSTRUCTIONS
+'When using the AppendParameterSet function:
+'Run the "Parameters.m" script to load all the parameter values into the MATLAB workspace.
+
+'For any of the other Append* functions:
+'Use the csvread(<filename>) command to import the data into MATLAB. 
+
+'===================================================================================================================
+
+
+'Exports all the S-Parameter data in the 1D Results tree
+Sub AppendSParams(SetOutputPath)
+  If (SetOutputPath = "") Then
+	    SetOutputPath = "csv_exports"
+	End If
+	CreateDirs(SetOutputPath)
+	root = "1D Results\S-Parameters"
+	SelectTreeItem(root)
+	'Get a "dictionary" of all the result items in the folder
+  Set Dictionary = CreateObject("Scripting.Dictionary")
+	Set Dictionary = TraverseResultTree(root, Dictionary)
+	for each treePath in Dictionary
+      'Get the file name containing the results from CST
+	    dataFile = ResultTree.GetFileFromItemName(treePath)
+	    dataFile = Right(dataFile, Len(dataFile)-inStrRev(dataFile, "\"))
+	    dataFile = Left(dataFile, Len(dataFile)-Len(".sig"))
+	    'Get the result object
+	    Set Result = Result1DComplex(dataFile)
+	    'Get the complex data
+	    arrY = Result1DComplexYToCSV(Result)
+	    'Generate the target filename
+	    fileName = dataFile & ".csv"
+	    'Append the data to the file
+	    file = FreeFile
+	    Open SetOutputPath & fileName For Append As #file
+	    Print #file, arrY
+	    Close #file
+	Next
+End Sub
+
+'Exports all the parameter values to a .m file
+Sub AppendParameterSet(SetOutputPath)
+  If(SetOutputPath = "") Then
+	    SetOutputPath = "csv_exports"
+  End If
+  CreateDirs(SetOutputPath)
+  text = ""
+  numParams = GetNumberOfParameters()
+  for n = 0 to numParams-1 Step 1
+      k = GetParameterName(n)
+      v = GetParameterNValue(n)
+      text = text & vbNewLine & "if exist('" & k & "','var') == 0; " 
+      text = text & k & " = " & v & "; else " & k & "(end+1) = " & v & "; end;"
+  Next
+  fileName = "Parameters.m"
+  file = FreeFile
+  Open SetOutputPath & fileName For Append As #file
+  Print #file, text
+  Close #file
+End Sub 
+
+'Exports the frequency data for the S-Parameters
+Sub AppendFrequency(SetOutputPath)
+    If (SetOutputPath = "") Then
+      SetOutputPath = "csv_exports"
+    End If
+    CreateDirs(SetOutputPath)
     root = "1D Results\S-Parameters"
     SelectTreeItem(root)    
     Set Dictionary = CreateObject("Scripting.Dictionary")
@@ -51,13 +85,17 @@ Function AppendFrequency()
     Next
     fileName = "Frequency.csv"
     file = FreeFile
-    Open "results\" & fileName For Append As #file
+    Open SetOutputPath & fileName For Append As #file
     Print #file, arrX
     Close #file
-End Function
+End Sub
 
-Function AppendBalance()
-    CreateDirs("results")
+'Exports the power balance data
+Sub AppendBalance(SetOutputPath)
+    If (SetOutputPath = "") Then
+      SetOutputPath = "csv_exports"
+    End If
+    CreateDirs(SetOutputPath)
     root = "1D Results\Balance"
     Set Dictionary = CreateObject("Scripting.Dictionary")
     Set Dictionary = TraverseResultTree(root, Dictionary)
@@ -69,13 +107,14 @@ Function AppendBalance()
         dataFile = Left(dataFile, Len(dataFile)-Len(".bil"))
         fileName = "Balance" & dataFile & ".csv"
         file = FreeFile
-        Open "results\" & fileName For Append As #file
+        Open SetOutputPath & fileName For Append As #file
         Print #file, arrY
         Close #file
         Exit For
     Next
-End Function
+End Sub
 
+'Recursive function for traversing the result tree
 Function TraverseResultTree(Node, Dictionary)
     FirstChild = ResultTree.GetFirstChildName(Node)
     if FirstChild <> "" then ''This is a folder
@@ -91,6 +130,7 @@ Function TraverseResultTree(Node, Dictionary)
     Set TraverseResultTree = Dictionary
 End Function
 
+'Generates a comma separated string containing complex data
 Function Result1DComplexYToCSV(Result)
     arrY = ""
     N = Result.GetN
@@ -114,6 +154,7 @@ Function Result1DComplexYToCSV(Result)
     Result1DComplexYToCSV = arrY
 End Function
 
+'Generates a comma separated string containing the y-axis data
 Function Result1DYToCSV(Result)
 	arrY = ""
     N = Result.GetN
@@ -127,8 +168,9 @@ Function Result1DYToCSV(Result)
     Result1DYToCSV = arrY
 End Function
 
-Private Function Result1DXToCSV(Result)
-	arrX = ""
+'Generates a comma separated string containing the x-axis data
+Function Result1DXToCSV(Result)
+    arrX = ""
     N = Result.GetN
     for index = 0 To N-1 Step 1
     	if index = 0 then
@@ -140,7 +182,8 @@ Private Function Result1DXToCSV(Result)
     Result1DXToCSV = arrX
 End Function
 
-Function CreateDirs(paths)
+'Creates a folder from the specified path
+Sub CreateDirs(paths)
     ' Argument:
     ' paths   [string]   folder(s) to be created, single or
     '                        multi level, absolute or relative,
@@ -165,4 +208,4 @@ Function CreateDirs(paths)
             fs.CreateFolder strDirBuild
         end if
     next
-End Function
+End Sub

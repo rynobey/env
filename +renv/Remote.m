@@ -26,17 +26,17 @@ classdef Remote < handle
         rem.hostName = hostName;
         rem.hostPort = hostPort;
         rem.loadConfig;
-        %uname = input('FTP Username: ', 's');
-        uname = 'Ryno';
-        %pass = input('FTP Password: ', 's');
-        pass = 'ftppass';
+        uname = input('FTP Username: ', 's');
+        %uname = 'Ryno';
+        pass = input('FTP Password: ', 's');
+        %pass = 'ftppass';
         rem.ftpObj = ftp(rem.hostName, uname, pass);
         cd(rem.ftpObj, rem.ftpTemp);
         rem.sendTimer = timer('StartDelay', 0, 'BusyMode', 'queue', ...
             'ExecutionMode', 'fixedSpacing', 'TasksToExecute', 1);
         rem.rcvTimer = timer('StartDelay', 0, 'BusyMode', 'queue', ...
             'ExecutionMode', 'fixedSpacing', 'TasksToExecute', 1);
-        rem.schedTimer = timer('StartDelay', 0.5, 'BusyMode', 'queue', ...
+        rem.schedTimer = timer('StartDelay', 0.1, 'BusyMode', 'queue', ...
             'ExecutionMode', 'fixedSpacing', 'TasksToExecute', 1);
         rem.setupTimer;
         %connect to the socket host
@@ -53,9 +53,8 @@ classdef Remote < handle
         end
     end
     function setupTimer(rem)        
-        %rem.sendTimer.StartFcn = @(x,y)disp('Send Timer started!');
-        rem.sendTimer.TimerFcn = {@SendCallback, rem};
-        rem.sendTimer.StopFcn = {@SetupSchedTimer, 'Send', rem};
+        rem.sendTimer.TimerFcn = {@renv.SendCallback, rem};
+        rem.sendTimer.StopFcn = {@renv.SetupSchedTimer, 'Send', rem};
         start(rem.sendTimer);
     end
     function Send(rem, msg)
@@ -70,7 +69,6 @@ classdef Remote < handle
         commandText = sprintf('%s\n%s', commandText, '</Tx>');
         rem.dOutputStream.writeBytes(char(commandText));
         rem.dOutputStream.flush;
-        %wait(rem.rcvTimer);
         NBytes = rem.iStream.available;
         while NBytes == 0
             pause(0.1);
@@ -87,7 +85,6 @@ classdef Remote < handle
                 c4 = length(strfind(char(RawResponse(41:end)), '<Message />'));
                 if (c1 > 0 && c2 > 0) || c3 > 0 || c4 > 0
                     response = renv.Message(char(RawResponse(41:end)));
-                    disp(response.Msg);
                     break;
                 end
             end
@@ -206,14 +203,16 @@ classdef Remote < handle
       disp(rem.Request(msg).Msg);
     end
     function stopTimers(rem) 
-        wait(rem.sendTimer);
-        stop(rem.schedTimer);
-        stop(rem.sendTimer);
-        stop(rem.rcvTimer);
+        try
+          wait(rem.sendTimer);
+          stop(rem.schedTimer);
+          stop(rem.sendTimer);
+          stop(rem.rcvTimer);
+        end
     end
     function delete(rem)
-        rem.stopTimers();
         try
+            rem.stopTimers();
             delete(rem.sendTimer);
             delete(rem.rcvTimer);
             delete(rem.schedTimer);
@@ -246,7 +245,7 @@ classdef Remote < handle
         rem.remoteFtp = 'D:\\ftproot\work\Ryno\ftpTemp';
         rem.ftpTemp = '/Ryno/ftpTemp';
         rem.remoteWD = 'D:\\ftproot\work\Ryno\simwd';
-      elseif strcmp(rem.hostName, '192.168.1.104')
+      elseif strcmp(rem.hostName, '192.168.1.101')
         % running cst on laptop @ flat
         rem.remoteFtp = 'D:\\ryno\Documents\2012\Uni\m\ftpTemp';
         rem.ftpTemp = '/2012/Uni/m/ftpTemp';

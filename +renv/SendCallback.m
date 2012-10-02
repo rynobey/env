@@ -3,7 +3,6 @@ function SendCallback(obj, event, rem)
     %disp('SendCallback called');
     
     if length(rem.msgArr) > 0
-        % aggregate the data            
         commandText = '<Tx>';
         rem.dOutputStream.writeBytes(char(commandText));
         rem.dOutputStream.flush;
@@ -12,13 +11,11 @@ function SendCallback(obj, event, rem)
             commandText = msg.GetRawXML;
             rem.dOutputStream.writeBytes(char(commandText));
             rem.dOutputStream.flush;
-            %disp(commandText);
-            pause(0.2);
+            pause(0.1);
         end            
         commandText = '</Tx>';
         rem.dOutputStream.writeBytes(char(commandText));
         rem.dOutputStream.flush;
-        %send data
         rem.msgArr = renv.Message.empty(1,0);
     end    
 end

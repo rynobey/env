@@ -1,0 +1,129 @@
+'#include "exports.lib"
+
+Function Define(sName As String, bCreate As Boolean, bNameChanged As Boolean) As Boolean
+
+		
+	Dim outputPath As String
+	outputPath = GetProjectPath("Result") & "\csv_exports\"
+
+	Begin Dialog UserDialog 370,182 ' %GRID:10,7,1,1
+		GroupBox 10,7,350,98,"CSV file options",.GroupBox1
+		CheckBox 40,25,200,14,"Append Parameter Set",.ApParamSet
+		CheckBox 40,45,270,14,"Append (Complex) S-Parameters",.ApSParams
+		CheckBox 40,65,200,14,"Append Frequency Values",.ApFreq
+		CheckBox 40,85,200,14,"Append Power Balance",.ApBal
+		OKButton 20,154,100,21
+		CancelButton 130,154,100,21
+		Text 20,119,350,28,"Note: Touchstone Files will be exported to"+vbCrLf+"          project folder ""Results\csv_exports\""",.Text3
+	End Dialog
+	Dim dlg As UserDialog
+
+	dlg.ApParamSet = GetScriptSetting("AppendParameterSet","1")
+	dlg.ApSParams = GetScriptSetting("AppendSParams","1")
+	dlg.ApFreq = GetScriptSetting("AppendFrequency", "1")
+	dlg.ApBal = GetScriptSetting("AppendBalance", "0")
+
+	If (Not Dialog(dlg)) Then
+
+		' The user left the dialog box without pressing Ok. Assigning False to the function
+		' will cause the framework to cancel the creation or modification without storing
+		' anything.
+
+		Define = False
+	Else
+
+		' The user properly left the dialog box by pressing Ok. Assigning True to the function
+		' will cause the framework to complete the creation or modification and store the corresponding
+		' settings.
+
+		Define = True
+
+		' Store the script settings into the database for later reuse by either the define function (for modifications)
+		' or the evaluate function.
+
+		StoreScriptSetting("AppendParameterSet", dlg.ApParamSet)
+		StoreScriptSetting("AppendSParams", dlg.ApSParams)
+		StoreScriptSetting("AppendFrequency", dlg.ApFreq)
+		StoreScriptSetting("AppendBalance", dlg.ApBal)
+		StoreScriptSetting("OutputPath", outputPath)
+		StoreTemplateSetting("TemplateType","1D")
+
+	End If
+
+End Function
+
+Function Evaluate1D() As Object
+
+	Dim outputPath As String
+	outputPath = GetProjectPath("Result") & "\csv_exports\"
+
+	DoAppendParameterSet = CBool(GetScriptSetting("AppendParameterSet", "1"))
+	DoAppendSParams = CBool(GetScriptSetting("AppendSParams","1"))
+	DoAppendFrequency = CBool(GetScriptSetting("AppendFrequency", "1"))
+	DoAppendBalance = CBool(GetScriptSetting("AppendBalance", "0"))
+	SetOutputPath = CStr(GetScriptSetting("OutputPath", outputPath))
+
+	If DoAppendSParams Then
+		AppendSParams(SetOutputPath)
+	End If
+	If DoAppendFrequency Then
+		AppendFrequency(SetOutputPath)
+	End If
+	If DoAppendBalance Then
+		AppendBalance(SetOutputPath)
+	End If
+	If DoAppendParameterSet Then
+		AppendParameterSet(SetOutputPath)
+	End If
+
+	Set Evaluate1D = Result1D("")
+
+	With Evaluate1D
+		.Initialize 1
+		.SetXY 0,1,1
+	End With
+
+	Dim filesys
+	Set filesys = CreateObject("Scripting.FileSystemObject")
+	filesys.CreateTextFile "D:\ryno\Documents\2012\Uni\m\simwd\IsolationStudy\tmp.tmp", True
+
+	With Resulttree
+		.Name "1D Result\-1DExports"
+		.File "D:\ryno\Documents\2012\Uni\m\simwd\IsolationStudy\tmp.tmp"
+		.DeleteAt "truemodelchange"
+		.Type "Hidden"
+		.Add
+	End With
+
+	If filesys.FileExists("D:\ryno\Documents\2012\Uni\m\simwd\IsolationStudy\tmp.tmp") Then
+	   filesys.DeleteFile "D:\ryno\Documents\2012\Uni\m\simwd\IsolationStudy\tmp.tmp"
+	End If
+
+
+End Function
+
+Sub Main2
+
+' -------------------------------------------------------------------------------------------------
+' Main: This function serves as a main program for testing purposes.
+'       You need to rename this function to "Main" for debugging the result template.
+'
+'		PLEASE NOTE that a result template file must not contain a main program for
+'       proper execution by the framework. Therefore please ensure to rename this function
+'       to e.g. "Main2" before the result template can be used by the framework.
+' -------------------------------------------------------------------------------------------------
+
+	' Now call the define method and check whether it is completed successfully
+
+	'ActivateScriptSettings True
+	'ClearScriptSettings
+
+	If (Define("test", True, False)) Then
+
+		Evaluate1D()
+
+	End If
+
+	'ActivateScriptSettings False
+
+End Sub

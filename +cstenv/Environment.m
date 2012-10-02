@@ -29,7 +29,7 @@ classdef Environment < handle
         %env.CST = actxserver(appName);
         %env.remotePath = env.path;
       %catch
-        env.remote = renv.Remote('localhost', 8000);
+        env.remote = renv.Remote('192.168.1.101', 8000);
         env.CST = cstenv.RemoteCOMObj('CST', env.remote);
         scriptCode = sprintf('Set %s = CreateObject("%s")', 'CST', appName);
         msg = renv.Message.New('VBScript', scriptCode);
