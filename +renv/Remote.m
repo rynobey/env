@@ -130,6 +130,8 @@ classdef Remote < handle
       newPath = sprintf('%s\\%s', destPath, newPath);
       mput(rem.ftpObj, sourcePath);
       if exist(sourcePath, 'dir') == 7 % if source is a folder
+        disp(sprintf('O1: %s', tempPath));
+        disp(sprintf('O2: %s', destPath));
         msg = renv.Message.New('CopyDir', sprintf('%s;%s', tempPath, destPath));
         rem.Request(msg);
         msg = renv.Message.New('RMDir', tempPath);

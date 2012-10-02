@@ -125,7 +125,7 @@ classdef Project < handle
     function New(proj)
       try
         cstPath = sprintf('%s\\%s\\%s.cst', proj.Env.remotePath, ...
-          proj.projectName, proj.projectName);
+        proj.projectName, proj.projectName);
         proj.CSTProject = proj.Env.CST.invoke('NewMWS');
         proj.CSTProject.invoke('SaveAs', cstPath, 'False');
       catch e
@@ -135,11 +135,16 @@ classdef Project < handle
       end
     end
     function updateLib(proj)
-      sourceFilePath = sprintf('%s\\env\\+cstenv\\+scripts\\exports.lib', ...
-        proj.Env.path);
       installPath = proj.CSTProject.invoke('GetInstallPath');
-      destFolderPath = sprintf('%s\\Library\\Includes\\', installPath);
-      proj.Env.remote.Upload(sourceFilePath, destFolderPath);
+      sourceDirPath = fullfile(proj.Env.path, 'env', '+cstenv', '+scripts', '');
+      sourceDirPath = fullfile(sourceDirPath, 'cst', 'Includes', '');
+      destFolderPath = sprintf('%s\\Library', installPath);
+      proj.Env.remote.Upload(sourceDirPath, destFolderPath);
+
+      sourceDirPath = fullfile(proj.Env.path, 'env', '+cstenv', '+scripts', '');
+      sourceDirPath = fullfile(sourceDirPath, 'cst', 'Result Templates', 'General 1D', '');
+      destFolderPath = sprintf('%s\\Library\\Result Templates', installPath);
+      proj.Env.remote.Upload(sourceDirPath, destFolderPath);
     end
     function delete(proj) % called when this object is destroyed
       try
@@ -186,7 +191,6 @@ classdef Project < handle
       else
         proj = env.FindByName(projectName);
       end
-      %proj.updateLib();
     end
   end
 end
