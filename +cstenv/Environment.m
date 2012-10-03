@@ -12,28 +12,21 @@ classdef Environment < handle
     function env = Environment(varargin)
       if length(varargin) == 1
         if varargin{1}
-          env.ConCST();
+          env.ConRemote();
           disp('Started CST Environment.');
         else
           disp('Started CST Environment in offline mode.');
         end
       else
-        env.ConCST();
+        env.ConRemote();
         disp('Started CST Environment.');
       end
       env.path = cd;
     end
-    function ConCST(env)
-      appName = 'CSTStudio.Application';
+    function ConRemote(env)
       try
-        %env.CST = actxserver(appName);
-        %env.remotePath = env.path;
-      %catch
         env.remote = renv.Remote('192.168.1.101', 8000);
         env.CST = cstenv.RemoteCOMObj('CST', env.remote);
-        scriptCode = sprintf('Set %s = CreateObject("%s")', 'CST', appName);
-        msg = renv.Message.New('VBScript', scriptCode);
-        env.remote.Send(msg);
         env.remotePath = env.remote.remoteWD;
       end
     end

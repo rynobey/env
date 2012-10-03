@@ -62,34 +62,41 @@ classdef Remote < handle
         rem.msgArr{end + 1} = msg;
     end
     function response = Request(rem, msg)
-        rem.stopTimers;
-        renv.ReceiveCallback([], [], rem);
-        commandText = '<Tx>';
-        commandText = sprintf('%s\n%s', commandText, msg.GetRawXML);
-        commandText = sprintf('%s\n%s', commandText, '</Tx>');
-        rem.dOutputStream.writeBytes(char(commandText));
-        rem.dOutputStream.flush;
+      rem.stopTimers;
+      renv.ReceiveCallback([], [], rem);
+      commandText = '<Tx>';
+      commandText = sprintf('%s\n%s', commandText, msg.GetRawXML);
+      commandText = sprintf('%s\n%s', commandText, '</Tx>');
+      rem.dOutputStream.writeBytes(char(commandText));
+      rem.dOutputStream.flush;
+      NBytes = rem.iStream.available;
+      while NBytes <= 1
+        pause(0.1);
         NBytes = rem.iStream.available;
-        while NBytes == 0
-            pause(0.1);
-            NBytes = rem.iStream.available;
+      end
+      RawResponse = zeros(1, NBytes, 'uint8');
+      index = 1;
+      for i = 1:NBytes
+        byte = rem.dInputStream.readByte;
+        if byte ~= 0
+          RawResponse(index) =  byte;
+          offset = find(RawResponse == '<', 1, 'first') + 40;
+          c1 = length(strfind(char(RawResponse(offset:end)), '<Message'));
+          c2 = length(strfind(char(RawResponse(offset:end)), '</Message>'));
+          c3 = length(strfind(char(RawResponse(offset:end)), '<Message/>'));
+          c4 = length(strfind(char(RawResponse(offset:end)), '<Message />'));
+          if (c1 > 0 && c2 > 0) || c3 > 0 || c4 > 0
+            response = renv.Message(char(RawResponse(offset:end)));
+            RawResponse = [];
+            index = 0;
+            break;
+          end
+        else
+          index = index - 1;
         end
-        RawResponse = zeros(1, NBytes, 'uint8');
-        for i = 1:NBytes
-            byte = rem.dInputStream.readByte;
-            if byte ~= 0
-                RawResponse(i) =  byte;
-                c1 = length(strfind(char(RawResponse(41:end)), '<Message'));
-                c2 = length(strfind(char(RawResponse(41:end)), '</Message>'));
-                c3 = length(strfind(char(RawResponse(41:end)), '<Message/>'));
-                c4 = length(strfind(char(RawResponse(41:end)), '<Message />'));
-                if (c1 > 0 && c2 > 0) || c3 > 0 || c4 > 0
-                    response = renv.Message(char(RawResponse(41:end)));
-                    break;
-                end
-            end
-        end            
-        rem.setupTimer;
+        index = index + 1;
+      end            
+      rem.setupTimer;
     end
     function ASend(rem, msgArr)
       %function imports
