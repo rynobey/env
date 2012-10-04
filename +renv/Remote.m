@@ -124,7 +124,10 @@ classdef Remote < handle
         socket.close;
       end
     end
-    function Upload(rem, sourcePath, destPath)
+    function Upload(rem, sourcePath, destPath, varargin)
+      overwrite = 0;
+      if length(varargin) == 1
+        overwrite = varargin{1};
       if sourcePath(end) == filesep
         sourcePath = sourcePath(1:end-1);
       end
@@ -137,32 +140,54 @@ classdef Remote < handle
       newPath = sprintf('%s\\%s', destPath, newPath);
       mput(rem.ftpObj, sourcePath);
       if exist(sourcePath, 'dir') == 7 % if source is a folder
-        disp(sprintf('O1: %s', tempPath));
-        disp(sprintf('O2: %s', destPath));
-        msg = renv.Message.New('CopyDir', sprintf('%s;%s', tempPath, destPath));
-        rem.Request(msg);
-        msg = renv.Message.New('RMDir', tempPath);
-        rem.Request(msg);
-        msg = renv.Message.New('DirExists', tempPath);
-        if strcmp(rem.Request(msg).Msg, 'True')
-          disp('Temporary files were not deleted');
-        end
-        msg = renv.Message.New('DirExists', newPath);
-        if strcmp(rem.Request(msg).Msg, 'False')
-          disp('Files were not copied');
+        msg = renv.Message.New('DirExists', destPath);
+        response = rem.Request(msg);
+        cond1 = (overwrite == 0 && strcmp(response.Msg, 'False'));
+        cond2 = (overwrite == 1);
+        if cond1 || cond2
+          if overwrite == 1
+            msg = renv.Message.New('CopyDir', sprintf('%s;%s;True', tempPath, destPath));
+          else
+            msg = renv.Message.New('CopyDir', sprintf('%s;%s;False', tempPath, destPath));
+          end
+          rem.Request(msg);
+          msg = renv.Message.New('RMDir', tempPath);
+          rem.Request(msg);
+          msg = renv.Message.New('DirExists', tempPath);
+          if strcmp(rem.Request(msg).Msg, 'True')
+            disp('Temporary files were not deleted');
+          end
+          msg = renv.Message.New('DirExists', newPath);
+          if strcmp(rem.Request(msg).Msg, 'False')
+            disp('Files were not copied');
+          end
+        else
+          disp('Upload failed: destination file/folder already exists!');
         end
       elseif exist(sourcePath, 'file') == 2 % if source is a file
-        msg = renv.Message.New('CopyFile', sprintf('%s;%s', tempPath, destPath));
-        rem.Request(msg);
-        msg = renv.Message.New('RMFile', tempPath);
-        rem.Request(msg);
-        msg = renv.Message.New('FileExists', tempPath);
-        if strcmp(rem.Request(msg).Msg, 'True')
-          disp('Temporary file was not deleted');
-        end
-        msg = renv.Message.New('FileExists', newPath);
-        if strcmp(rem.Request(msg).Msg, 'False')
-          disp('File was not copied');
+        msg = renv.Message.New('FileExists', destPath);
+        response = rem.Request(msg);
+        cond1 = (overwrite == 0 && strcmp(response.Msg, 'False'));
+        cond2 = (overwrite == 1);
+        if cond1 || cond2
+          if overwrite == 1
+            msg = renv.Message.New('CopyFile', sprintf('%s;%s;True', tempPath, destPath));
+          else
+            msg = renv.Message.New('CopyFile', sprintf('%s;%s;False', tempPath, destPath));
+          end
+          rem.Request(msg);
+          msg = renv.Message.New('RMFile', tempPath);
+          rem.Request(msg);
+          msg = renv.Message.New('FileExists', tempPath);
+          if strcmp(rem.Request(msg).Msg, 'True')
+            disp('Temporary file was not deleted');
+          end
+          msg = renv.Message.New('FileExists', newPath);
+          if strcmp(rem.Request(msg).Msg, 'False')
+            disp('File was not copied');
+          end
+        else
+          disp('Upload failed: destination file/folder already exists!');
         end
       end
     end
@@ -212,29 +237,29 @@ classdef Remote < handle
       disp(rem.Request(msg).Msg);
     end
     function stopTimers(rem) 
-        try
-          wait(rem.sendTimer);
-          stop(rem.schedTimer);
-          stop(rem.sendTimer);
-          stop(rem.rcvTimer);
-        end
+      try
+        wait(rem.sendTimer);
+        stop(rem.schedTimer);
+        stop(rem.sendTimer);
+        stop(rem.rcvTimer);
+      end
     end
     function delete(rem)
-        try
-            rem.stopTimers();
-            delete(rem.sendTimer);
-            delete(rem.rcvTimer);
-            delete(rem.schedTimer);
-        end
-        %release objects / cleanup
-        rem.socket.shutdownInput;
-        rem.socket.shutdownOutput;
-        rem.iStream.close;
-        rem.dInputStream.close;
-        rem.dOutputStream.flush;
-        rem.oStream.close;
-        rem.dOutputStream.close;
-        rem.socket.close;
+      try
+        rem.stopTimers();
+        delete(rem.sendTimer);
+        delete(rem.rcvTimer);
+        delete(rem.schedTimer);
+      end
+      %release objects / cleanup
+      rem.socket.shutdownInput;
+      rem.socket.shutdownOutput;
+      rem.iStream.close;
+      rem.dInputStream.close;
+      rem.dOutputStream.flush;
+      rem.oStream.close;
+      rem.dOutputStream.close;
+      rem.socket.close;
     end
   end
   methods (Hidden)
