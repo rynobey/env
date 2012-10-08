@@ -98,36 +98,11 @@ classdef Remote < handle
       end            
       rem.setupTimer;
     end
-    function ASend(rem, msgArr)
-      %function imports
-      import java.io.*;
-      import java.net.Socket;
-      for n = 1:length(msgArr)
-        msg = msgArr(n);
-        %connect to the socket host
-        socket = Socket(rem.hostName, rem.hostPort);
-        %get data io streams
-        iStream   = socket.getInputStream;
-        dInputStream = DataInputStream(iStream);
-        oStream   = socket.getOutputStream;
-        dOutputStream = DataOutputStream(oStream);
-        %send data
-        commandText = msg.GetRawXML;
-        dOutputStream.writeBytes(char(commandText));
-        dOutputStream.flush;
-        %release objects / cleanup
-        iStream.close;
-        dInputStream.close;
-        dOutputStream.flush;
-        oStream.close;
-        dOutputStream.close;
-        socket.close;
-      end
-    end
     function Upload(rem, sourcePath, destPath, varargin)
       overwrite = 0;
       if length(varargin) == 1
         overwrite = varargin{1};
+      end
       if sourcePath(end) == filesep
         sourcePath = sourcePath(1:end-1);
       end
@@ -234,6 +209,10 @@ classdef Remote < handle
     end
     function ListWorkers(rem)
       msg = renv.Message.New('ListWorkers');
+      disp(rem.Request(msg).Msg);
+    end
+    function ListProcs(rem)
+      msg = renv.Message.New('ListProcs');
       disp(rem.Request(msg).Msg);
     end
     function stopTimers(rem) 

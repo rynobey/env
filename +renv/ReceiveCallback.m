@@ -21,7 +21,7 @@ function ReceiveCallback(obj, event, rem)
           d3 = strcmp(response.Msg, '');
           d4 = strcmp(response.Msg, 'Enqueued');
           if ~(d1 || d2 || d3 || d4) || (response.Success == 0)
-            disp(response.Msg);
+            disp(sprintf('SERVER: %s', response.Msg.toCharArray));
           end
         end
       else
