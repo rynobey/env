@@ -19,14 +19,17 @@ Sub AppendSParams(SetOutputPath)
   If (SetOutputPath = "") Then
 	    SetOutputPath = "csv_exports"
 	End If
+	If InStrRev(SetOutputPath, "\") = Len(SetOutputPath) Then
+	    SetOutputPath = Left(SetOutputPath, Len(SetOutputPath)-1)
+	End If
 	CreateDirs(SetOutputPath)
 	root = "1D Results\S-Parameters"
 	SelectTreeItem(root)
 	'Get a "dictionary" of all the result items in the folder
-  Set Dictionary = CreateObject("Scripting.Dictionary")
+  	Set Dictionary = CreateObject("Scripting.Dictionary")
 	Set Dictionary = TraverseResultTree(root, Dictionary)
 	for each treePath in Dictionary
-      'Get the file name containing the results from CST
+        'Get the file name containing the results from CST
 	    dataFile = ResultTree.GetFileFromItemName(treePath)
 	    dataFile = Right(dataFile, Len(dataFile)-inStrRev(dataFile, "\"))
 	    dataFile = Left(dataFile, Len(dataFile)-Len(".sig"))
@@ -38,19 +41,30 @@ Sub AppendSParams(SetOutputPath)
 	    fileName = dataFile & ".csv"
 	    'Append the data to the file
 	    file = FreeFile
-	    Open SetOutputPath & fileName For Append As #file
+	    Open SetOutputPath & "\" & fileName For Append As #file
 	    Print #file, arrY
 	    Close #file
-        arrY = Nothing
-        Result = Nothing
-        file = Nothing
+	    outputPath = Right(SetOutputPath, Len(SetOutputPath)-inStrRev(SetOutputPath , "\")) & "\"
+	    With Resulttree
+		.Name       outputPath & fileName
+		.File "^" + outputPath & fileName
+		.DeleteAt "truemodelchange"
+		.Type "Hidden"
+		.Add
+	    End With
+	    Set arrY = Nothing
+	    Set file = Nothing
+	    Set Result = Nothing
 	Next
 End Sub
 
 'Exports all the parameter values to a .m file
 Sub AppendParameterSet(SetOutputPath)
   If(SetOutputPath = "") Then
-	    SetOutputPath = "csv_exports"
+      SetOutputPath = "csv_exports"
+  End If
+  If InStrRev(SetOutputPath, "\") = Len(SetOutputPath) Then
+     SetOutputPath = Left(SetOutputPath, Len(SetOutputPath)-1)
   End If
   CreateDirs(SetOutputPath)
   text = ""
@@ -60,22 +74,33 @@ Sub AppendParameterSet(SetOutputPath)
       v = GetParameterNValue(n)
       text = text & vbNewLine & "if exist('" & k & "','var') == 0; " 
       text = text & k & " = " & v & "; else " & k & "(end+1) = " & v & "; end;"
-      k = Nothing
-      v = Nothing
+      Set k = Nothing
+      Set v = Nothing
   Next
   fileName = "Parameters.m"
   file = FreeFile
-  Open SetOutputPath & fileName For Append As #file
+  Open SetOutputPath & "\" & fileName For Append As #file
   Print #file, text
   Close #file
-  text = Nothing
-  file = Nothing
+  outputPath = Right(SetOutputPath, Len(SetOutputPath)-inStrRev(SetOutputPath , "\")) & "\"
+  With Resulttree
+      .Name       outputPath & fileName
+      .File "^" + outputPath & fileName
+      .DeleteAt "truemodelchange"
+      .Type "Hidden"
+      .Add
+  End With
+  Set text = Nothing
+  Set file = Nothing
 End Sub 
 
 'Exports the frequency data for the S-Parameters
 Sub AppendFrequency(SetOutputPath)
     If (SetOutputPath = "") Then
       SetOutputPath = "csv_exports"
+    End If
+    If InStrRev(SetOutputPath, "\") = Len(SetOutputPath) Then
+       SetOutputPath = Left(SetOutputPath, Len(SetOutputPath)-1)
     End If
     CreateDirs(SetOutputPath)
     root = "1D Results\S-Parameters"
@@ -88,22 +113,33 @@ Sub AppendFrequency(SetOutputPath)
       dataFile = Left(dataFile, Len(dataFile)-Len(".sig"))
       Set Result = Result1DComplex(dataFile)
       arrX = Result1DXToCSV(Result)
-      Result = Nothing
+      Set Result = Nothing
       Exit For
     Next
     fileName = "Frequency.csv"
     file = FreeFile
-    Open SetOutputPath & fileName For Append As #file
+    Open SetOutputPath & "\" & fileName For Append As #file
     Print #file, arrX
     Close #file
-    arrX = Nothing
-    file = Nothing
+    outputPath = Right(SetOutputPath, Len(SetOutputPath)-inStrRev(SetOutputPath , "\")) & "\"
+    With Resulttree
+      .Name       outputPath & fileName
+      .File "^" + outputPath & fileName
+      .DeleteAt "truemodelchange"
+      .Type "Hidden"
+      .Add
+    End With
+    Set ArrX = Nothing
+    Set file = Nothing
 End Sub
 
 'Exports the power balance data
 Sub AppendBalance(SetOutputPath)
     If (SetOutputPath = "") Then
       SetOutputPath = "csv_exports"
+    End If
+    If InStrRev(SetOutputPath, "\") = Len(SetOutputPath) Then
+      SetOutputPath = Left(SetOutputPath, Len(SetOutputPath)-1)
     End If
     CreateDirs(SetOutputPath)
     root = "1D Results\Balance"
@@ -117,12 +153,20 @@ Sub AppendBalance(SetOutputPath)
         dataFile = Left(dataFile, Len(dataFile)-Len(".bil"))
         fileName = "Balance" & dataFile & ".csv"
         file = FreeFile
-        Open SetOutputPath & fileName For Append As #file
+        Open SetOutputPath & "\" & fileName For Append As #file
         Print #file, arrY
-        arrY = Nothing
-        Result = Nothing
-        Close #file
-        file = Nothing
+        close #file
+    	outputPath = Right(SetOutputPath, Len(SetOutputPath)-inStrRev(SetOutputPath , "\")) & "\"
+    	With Resulttree
+      	    .Name       outputPath & fileName
+      	    .File "^" + outputPath & fileName
+      	    .DeleteAt "truemodelchange"
+      	    .Type "Hidden"
+      	    .Add
+    	End With
+	Set arrY = Nothing
+	Set file = Nothing
+	Set Result = Nothing
         Exit For
     Next
 End Sub
@@ -204,6 +248,7 @@ Sub CreateDirs(paths)
     Set fs = CreateObject("Scripting.FileSystemObject")
     ' Convert relative to absolute path
     strDirs = fs.GetAbsolutePathName(paths)
+	'MsgBox(paths)
     ' Split a multi level path in its "components"
     arrDirs = Split(strDirs, "\")
     ' Check if the absolute path is UNC or not

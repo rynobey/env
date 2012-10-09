@@ -25,7 +25,7 @@ classdef Environment < handle
     end
     function ConRemote(env)
       try
-        env.remote = renv.Remote('192.168.1.101', 8000);
+        env.remote = renv.Remote('localhost', 8000);
         env.CST = cstenv.RemoteCOMObj('CST', env.remote);
         env.remotePath = env.remote.remoteWD;
       end

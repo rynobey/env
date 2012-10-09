@@ -4,7 +4,7 @@ Function Define(sName As String, bCreate As Boolean, bNameChanged As Boolean) As
 
 		
 	Dim outputPath As String
-	outputPath = GetProjectPath("Result") & "\csv_exports\"
+	outputPath = GetProjectPath("Result") & "csv_exports\"
 
 	Begin Dialog UserDialog 370,182 ' %GRID:10,7,1,1
 		GroupBox 10,7,350,98,"CSV file options",.GroupBox1
@@ -55,7 +55,7 @@ End Function
 Function Evaluate1D() As Object
 
 	Dim outputPath As String
-	outputPath = GetProjectPath("Result") & "\csv_exports\"
+	outputPath = GetProjectPath("Result") & "csv_exports\"
 
 	DoAppendParameterSet = CBool(GetScriptSetting("AppendParameterSet", "1"))
 	DoAppendSParams = CBool(GetScriptSetting("AppendSParams","1"))
@@ -85,18 +85,18 @@ Function Evaluate1D() As Object
 
 	Dim filesys
 	Set filesys = CreateObject("Scripting.FileSystemObject")
-	filesys.CreateTextFile "D:\ryno\Documents\2012\Uni\m\simwd\IsolationStudy\tmp.tmp", True
+	filesys.CreateTextFile GetProjectPath("Result") & "\tmp.tmp", True
 
 	With Resulttree
 		.Name "1D Result\-1DExports"
-		.File "D:\ryno\Documents\2012\Uni\m\simwd\IsolationStudy\tmp.tmp"
+		.File GetProjectPath("Result") & "\tmp.tmp"
 		.DeleteAt "truemodelchange"
 		.Type "Hidden"
 		.Add
 	End With
 
-	If filesys.FileExists("D:\ryno\Documents\2012\Uni\m\simwd\IsolationStudy\tmp.tmp") Then
-	   filesys.DeleteFile "D:\ryno\Documents\2012\Uni\m\simwd\IsolationStudy\tmp.tmp"
+	If filesys.FileExists(GetProjectPath("Result") & "\tmp.tmp") Then
+	   filesys.DeleteFile GetProjectPath("Result") & "\tmp.tmp"
 	End If
 
 
