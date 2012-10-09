@@ -139,12 +139,12 @@ classdef Project < handle
       sourceDirPath = fullfile(proj.Env.path, 'env', '+cstenv', '+scripts', '');
       sourceDirPath = fullfile(sourceDirPath, 'cst', 'Includes', '');
       destFolderPath = sprintf('%s\\Library', installPath);
-      proj.Env.remote.Upload(sourceDirPath, destFolderPath);
+      proj.Env.remote.Upload(sourceDirPath, destFolderPath, 1);
 
       sourceDirPath = fullfile(proj.Env.path, 'env', '+cstenv', '+scripts', '');
       sourceDirPath = fullfile(sourceDirPath, 'cst', 'Result Templates', 'General 1D', '');
       destFolderPath = sprintf('%s\\Library\\Result Templates', installPath);
-      proj.Env.remote.Upload(sourceDirPath, destFolderPath);
+      proj.Env.remote.Upload(sourceDirPath, destFolderPath, 1);
     end
     function delete(proj) % called when this object is destroyed
       try
