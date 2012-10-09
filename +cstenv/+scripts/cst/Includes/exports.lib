@@ -41,6 +41,9 @@ Sub AppendSParams(SetOutputPath)
 	    Open SetOutputPath & fileName For Append As #file
 	    Print #file, arrY
 	    Close #file
+        arrY = Nothing
+        Result = Nothing
+        file = Nothing
 	Next
 End Sub
 
@@ -57,12 +60,16 @@ Sub AppendParameterSet(SetOutputPath)
       v = GetParameterNValue(n)
       text = text & vbNewLine & "if exist('" & k & "','var') == 0; " 
       text = text & k & " = " & v & "; else " & k & "(end+1) = " & v & "; end;"
+      k = Nothing
+      v = Nothing
   Next
   fileName = "Parameters.m"
   file = FreeFile
   Open SetOutputPath & fileName For Append As #file
   Print #file, text
   Close #file
+  text = Nothing
+  file = Nothing
 End Sub 
 
 'Exports the frequency data for the S-Parameters
@@ -81,6 +88,7 @@ Sub AppendFrequency(SetOutputPath)
       dataFile = Left(dataFile, Len(dataFile)-Len(".sig"))
       Set Result = Result1DComplex(dataFile)
       arrX = Result1DXToCSV(Result)
+      Result = Nothing
       Exit For
     Next
     fileName = "Frequency.csv"
@@ -88,6 +96,8 @@ Sub AppendFrequency(SetOutputPath)
     Open SetOutputPath & fileName For Append As #file
     Print #file, arrX
     Close #file
+    arrX = Nothing
+    file = Nothing
 End Sub
 
 'Exports the power balance data
@@ -109,7 +119,10 @@ Sub AppendBalance(SetOutputPath)
         file = FreeFile
         Open SetOutputPath & fileName For Append As #file
         Print #file, arrY
+        arrY = Nothing
+        Result = Nothing
         Close #file
+        file = Nothing
         Exit For
     Next
 End Sub
