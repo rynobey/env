@@ -70,6 +70,23 @@ classdef Parameter < handle
         end
       end
     end
+    function seq = UpdSeq(param)
+      for n = 1:length(param)
+        if n == 1
+          if length(param(n).project) == 0
+            seq = cstenv.CommandSequence([], '');
+          else
+            seq = cstenv.CommandSequence(param(n).project.CSTProject, '');
+          end
+        end
+        if strcmp(class(param(n).value), 'double')
+          seq.Add('StoreDoubleParameter', param(n).name, num2str(param(n).value));
+        elseif ischar(class(param(n).value))
+          seq.Add('StoreParameter', param(n).name, param(n).value);
+        end
+        seq.Add('SetParameterDescription', param(n).name, param(n).description);
+      end
+    end
     function seq = SetSeq(param)
       for n = 1:length(param)
         if n == 1

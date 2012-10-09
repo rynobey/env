@@ -19,6 +19,7 @@ classdef TxLine < cstenv.Solid
             tx.theta1 = cstenv.Parameter(tx, 'theta1', theta1);
             tx.theta2 = cstenv.Parameter(tx, 'theta2', theta2);
             tx.radius = cstenv.Parameter(tx, 'radius', radius);
+            tx.avgTheta = cstenv.Parameter(tx, 'avgTheta', tx.avgThetaExpr);
         end
         function seq = Create(tx)
             % create face
@@ -96,9 +97,6 @@ classdef TxLine < cstenv.Solid
             initSeq = tx.InitParameters();
             seq = cstenv.CommandSequence.Join(initSeq, seq);
         end 
-        function avgTheta = get.avgTheta(tx)
-            avgTheta = (tx.theta1 + tx.theta2)/2;
-        end
         function dTheta = get.dTheta(tx)
             dTheta = abs(tx.theta1 - tx.theta2);
         end
