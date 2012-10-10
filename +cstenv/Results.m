@@ -32,19 +32,22 @@ classdef Results < handle
             curPath = cd;
             %get list of result files for both dirs
             cd(sourceResultDir);
-            sourceFileList = ls;
+            tempL1 = dir;
+            sourceFileList = {tempL1.name};
             cd(destResultDir);
-            destFileList = ls;
+            tempL2 = dir;
+            destFileList = {tempL2.name};
             %compare result file lists
             numNotFound = 0;
-            for i = 1:length(sourceFileList(:,1))
+            for i = 1:length(sourceFileList)
                 found = 0;
-                for j = 1:length(destFileList(:,1))
-                    if strcmp(sourceFileList(i,:), destFileList(j,:))
+                for j = 1:length(destFileList)
+                    if strcmp(sourceFileList{i}, destFileList{j})
                         found = 1;
                     end
                 end
                 if found == 0
+                    disp(sourceFileList{i});
                     numNotFound = numNotFound + 1;
                 end
             end
@@ -72,27 +75,27 @@ classdef Results < handle
                     end
                 end
                 if numExtraParams == 0
-                    for i = 1:length(sourceFileList(:,1))
-                        for j = 1:length(destFileList(:,1))
-                            if strcmp(sourceFileList(i,:), destFileList(j,:))
-                                % check that current item is a file
-                                if exist(sourceFileList(i,:), 'file') == 2
-                                    %read contents of source file
-                                    filePath = fullfile(sourceResultDir, sourceFileList(i,:));
-                                    sourceContents = fileread(filePath);
-                                    %read the contents of dest file
-                                    filePath = fullfile(destResultDir, destFileList(j,:));
-                                    %destContents = fileread(filePath);
-                                    %append source contents to dest contents
-                                    %combinedContents = sprintf('%s\n%s', sourceContents, destContents);
-                                    fid = fopen(filePath, 'a+');
-                                    fprintf(fid, '%s', sourceContents);
-                                    fclose(fid);
-                                end
-                                break;
-                            end
+                  for i = 1:length(sourceFileList)
+                    for j = 1:length(destFileList)
+                      if strcmp(sourceFileList(i), destFileList(j))
+                        % check that current item is a file
+                        if exist(sourceFileList{i}, 'file') == 2
+                          %read contents of source file
+                          filePath = fullfile(sourceResultDir, sourceFileList{i});
+                          sourceContents = fileread(filePath);
+                          %read the contents of dest file
+                          filePath = fullfile(destResultDir, destFileList{j});
+                          %destContents = fileread(filePath);
+                          %append source contents to dest contents
+                          %combinedContents = sprintf('%s\n%s', sourceContents, destContents);
+                          fid = fopen(filePath, 'a+');
+                          fprintf(fid, '%s', sourceContents);
+                          fclose(fid);
                         end
-                    end                    
+                        break;
+                      end
+                    end
+                  end                    
                 else
                     disp('Unable to complete operation!');
                 end

@@ -111,21 +111,25 @@ classdef IsolationStudy < cstenv.Project
       seq.Add('Start');
       seq.Execute();
 		end
-		function Results() % Commands for retrieving and/or post-processing the results
-      persistent fOu;
-      persistent S;
-      persistent F;
+		function Results(set_ratio, set_numPorts, doReload) % Commands for retrieving and/or post-processing the results
+			obj = IsolationStudy.GetObject('IsolationStudy');
       curPath = cd;
-      path = fullfile(env.path, obj.projectName, 'session2Res', '');
+      path = fullfile(curPath, obj.projectName, 'combined1to3', '')
       cd(path);
       Parameters();
       if doReload == 1
-        fOu = cstenv.Results.GetFirstOrUniqIndexes(path);
+        evalin('base', 'clearvars fOu S F');
+        assignin('base', 'fOu', cstenv.Results.GetFirstOrUniqIndexes(path));
         for n = 1:9
             S(n,2,:, :) = csvread(sprintf('cS%d(1)2(1).csv', n));
         end
-        F = csvread('Frequency.csv');
+        assignin('base', 'S', S);
+        assignin('base', 'F', csvread('Frequency.csv'));
       end
+      clearvars fOu S F;
+      fOu = evalin('base', 'fOu;');
+      S = evalin('base', 'S;');
+      F = evalin('base', 'F;');
       cd(curPath);
       
       sel_aaa_ratio = set_ratio;
@@ -142,6 +146,7 @@ classdef IsolationStudy < cstenv.Project
       worst = squeeze(worst);
       port = squeeze(port);
       worstDB = 20*log10(abs(worst));
+      figure(3);
       imagesc(F(1,:), sorted_conicalAngle(sorted_selector),worstDB);
       title(sprintf('Worst Isolation Between Port Pairs for %s = %.2f', 'ratio', sel_aaa_ratio));
       xlabel('Frequency [GHz]');

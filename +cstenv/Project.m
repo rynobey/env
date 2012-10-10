@@ -16,17 +16,21 @@ classdef Project < handle
       proj.Env = env;
       proj.projectPath = fullfile(env.path, projectName, '');
       proj.projectName = projectName;
-      cstPath = sprintf('%s\\%s\\%s.cst', proj.Env.remotePath, ...
-        proj.projectName, proj.projectName);
-      msg = renv.Message.New('FileExists', cstPath);
-      if exist(proj.projectPath, 'dir') == 7 && ...
-        strcmp(env.remote.Request(msg).Msg, 'True')
-          proj.Open();
-      elseif exist(proj.projectPath, 'dir') == 7 && ...
-        strcmp(env.remote.Request(msg).Msg, 'False')
-          proj.New();
-      elseif exist(proj.projectPath, 'dir') ~= 7
-          disp('ERROR: Project folder does not exist!');
+      if length(env.remote) == 0
+        disp(sprintf('%s opened in offline mode', proj.projectName));
+      else
+        cstPath = sprintf('%s\\%s\\%s.cst', proj.Env.remotePath, ...
+          proj.projectName, proj.projectName);
+        msg = renv.Message.New('FileExists', cstPath);
+        if exist(proj.projectPath, 'dir') == 7 && ...
+          strcmp(env.remote.Request(msg).Msg, 'True')
+            proj.Open();
+        elseif exist(proj.projectPath, 'dir') == 7 && ...
+          strcmp(env.remote.Request(msg).Msg, 'False')
+            proj.New();
+        elseif exist(proj.projectPath, 'dir') ~= 7
+            disp('ERROR: Project folder does not exist!');
+        end
       end
     end
     function Close(proj)
