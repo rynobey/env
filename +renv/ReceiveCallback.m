@@ -1,14 +1,15 @@
 function ReceiveCallback(obj, event, rem)
-  NBytes = rem.iStream.available;
-  if NBytes ~= 0    
-    RawResponse = zeros(1, NBytes, 'uint8');
-    index = 1;
-    for i = 1:NBytes
-      byte = rem.dInputStream.readByte;
-      if byte ~= 0
-        RawResponse(index) =  byte;        
-        offset = getStartIndex(RawResponse);
-        if offset > -1
+  try
+    NBytes = rem.iStream.available;
+    if NBytes ~= 0    
+      RawResponse = zeros(1, NBytes, 'uint8');
+      index = 1;
+      for i = 1:NBytes
+        byte = rem.dInputStream.readByte;
+        if byte ~= 0
+          RawResponse(index) =  byte;        
+          offset = getStartIndex(RawResponse);
+          if offset > -1
             offset = offset + 40;
             c1 = length(strfind(char(RawResponse(offset:end)), '<Message'));
             c2 = length(strfind(char(RawResponse(offset:end)), '</Message>'));
@@ -26,11 +27,12 @@ function ReceiveCallback(obj, event, rem)
                 disp(sprintf('SERVER: %s', response.Msg.toCharArray));
               end
             end
+          end
+        else
+          index = index - 1;
         end
-      else
-        index = index - 1;
+        index = index + 1;
       end
-      index = index + 1;
     end
   end
 end
