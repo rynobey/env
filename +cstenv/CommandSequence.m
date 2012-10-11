@@ -3,9 +3,9 @@ classdef CommandSequence < handle
   %   Detailed explanation goes here
   
   properties
-      cmdArr = cstenv.Command.empty(1,0)
-      object;
-      objectName;
+    cmdArr = cstenv.Command.empty(1,0)
+    object;
+    objectName;
   end
   
   methods

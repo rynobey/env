@@ -111,5 +111,4 @@ classdef RemoteCOMObj < handle
     function release(o)
     end
   end
-
 end
