@@ -58,6 +58,21 @@ classdef IsolationStudy < cstenv.Project
       seq.Add('Add', con1.solidPath, coax2.solidPath);
       obj.AddToHistory('combine', seq.ToVBA());         
       obj.Rebuild();
+
+      %add slots
+      exprX = sprintf('(%s - 10)', con1.radius.name);
+      slot1 = solid.Brick(obj, 'slot1', exprX, 0.8, 10);
+      seq = slot1.MoveExpr(sprintf('(%s)/2+10/2', con1.radius.name), ...
+        '0', '0');
+      seq = CommandSequence.Join(slot1.Create, seq);
+      aSeq = slot1.RotateExpr('0', '0', '0', '0', '0', ...
+        sprintf('180/(%s)', numPorts.name));
+      seq = CommandSequence.Join(seq, aSeq);
+      aSeq = slot1.RotateAndCopyExpr('0', '0', '0', '0', '0', ...
+        sprintf('360/(%s)', numPorts.name), sprintf('(%s - 1)', numPorts.name));
+      seq = CommandSequence.Join(seq, aSeq);
+      obj.AddToHistory('slot1', seq.ToVBA());
+
 		end
 		function Setup() % Commands for setting up the simulation (e.g. generating mesh etc.)
 			obj = IsolationStudy.GetObject('IsolationStudy');
@@ -114,7 +129,7 @@ classdef IsolationStudy < cstenv.Project
 		function Results(set_ratio, set_numPorts, doReload) % Commands for retrieving and/or post-processing the results
 			obj = IsolationStudy.GetObject('IsolationStudy');
       curPath = cd;
-      path = fullfile(curPath, obj.projectName, 'combined1to3', '')
+      path = fullfile(curPath, obj.projectName, 'session4Res', '')
       cd(path);
       Parameters();
       if doReload == 1
@@ -135,7 +150,7 @@ classdef IsolationStudy < cstenv.Project
       sel_aaa_ratio = set_ratio;
       sel_aaa_numPorts = set_numPorts;
 
-      selector = aaa_ratio == sel_aaa_ratio & aaa_numPorts == sel_aaa_numPorts;
+      selector = aaa_ratio <= sel_aaa_ratio & aaa_numPorts == sel_aaa_numPorts;
       selector = selector & fOu';
 
       [X, AI]= sort(aaa_conicalAngle, 'descend');
