@@ -92,14 +92,16 @@ classdef Solid < handle
         sol.offsetZ = sol.offsetZ + offsetZ;
       end
     end
-    function seq = RotateExpr(sol, pExprX, pExprY, pExprZ, aExprX, aExprY, aExprZ)
+    function seq = RotateExpr(sol, pExprX, pExprY, pExprZ, aExprX, ...
+        aExprY, aExprZ)
       objName = 'Transform';
       obj = sol.project.GetCOMObj(objName);
       seq = cstenv.CommandSequence(obj, objName);
       seq.Add('Reset');
       if length(sol.ports) > 0 %#ok<ISMT>
         for n = 1:length(sol.ports)
-          tSeq = sol.ports(n).RotateExpr(pExprX, pExprY, pExprZ, aExprX, aExprY, aExprZ);
+          tSeq = sol.ports(n).RotateExpr(pExprX, pExprY, pExprZ, ...
+            aExprX, aExprY, aExprZ);
         end
         seq = cstenv.CommandSequence.Join(seq, tSeq);
       end

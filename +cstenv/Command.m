@@ -64,4 +64,3 @@ classdef Command < handle
     end
   end
 end
-

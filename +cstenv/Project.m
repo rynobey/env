@@ -146,7 +146,8 @@ classdef Project < handle
       proj.Env.remote.Upload(sourceDirPath, destFolderPath, 1);
 
       sourceDirPath = fullfile(proj.Env.path, 'env', '+cstenv', '+scripts', '');
-      sourceDirPath = fullfile(sourceDirPath, 'cst', 'Result Templates', 'General 1D', '');
+      sourceDirPath = fullfile(sourceDirPath, 'cst', 'Result Templates', ...
+        'General 1D', '');
       destFolderPath = sprintf('%s\\Library\\Result Templates', installPath);
       proj.Env.remote.Upload(sourceDirPath, destFolderPath, 1);
     end
