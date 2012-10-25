@@ -58,6 +58,21 @@ classdef IsolationStudy < cstenv.Project
       seq.Add('Add', con1.solidPath, coax2.solidPath);
       obj.AddToHistory('combine', seq.ToVBA());         
       obj.Rebuild();
+
+      %add slots
+      exprX = sprintf('(%s - 10)', con1.radius.name);
+      slot1 = solid.Brick(obj, 'slot1', exprX, 0.8, 10);
+      seq = slot1.MoveExpr(sprintf('(%s)/2+10/2', con1.radius.name), ...
+        '0', '0');
+      seq = CommandSequence.Join(slot1.Create, seq);
+      aSeq = slot1.RotateExpr('0', '0', '0', '0', '0', ...
+        sprintf('180/(%s)', numPorts.name));
+      seq = CommandSequence.Join(seq, aSeq);
+      aSeq = slot1.RotateAndCopyExpr('0', '0', '0', '0', '0', ...
+        sprintf('360/(%s)', numPorts.name), sprintf('(%s - 1)', numPorts.name));
+      seq = CommandSequence.Join(seq, aSeq);
+      obj.AddToHistory('slot1', seq.ToVBA());
+
 		end
 		function Setup() % Commands for setting up the simulation (e.g. generating mesh etc.)
 			obj = IsolationStudy.GetObject('IsolationStudy');
@@ -112,9 +127,9 @@ classdef IsolationStudy < cstenv.Project
       seq.Execute();
 		end
 		function Results(set_ratio, set_numPorts, doReload) % Commands for retrieving and/or post-processing the results
-			obj = IsolationStudy.GetObject('IsolationStudy');
+			%obj = IsolationStudy.GetObject('IsolationStudy');
       curPath = cd;
-      path = fullfile(curPath, obj.projectName, 'combined1to3', '')
+      path = fullfile(curPath, 'IsolationStudy', 'combined1to3', '')
       cd(path);
       Parameters();
       if doReload == 1
@@ -131,28 +146,42 @@ classdef IsolationStudy < cstenv.Project
       S = evalin('base', 'S;');
       F = evalin('base', 'F;');
       cd(curPath);
-      
-      sel_aaa_ratio = set_ratio;
-      sel_aaa_numPorts = set_numPorts;
-
-      selector = aaa_ratio == sel_aaa_ratio & aaa_numPorts == sel_aaa_numPorts;
+     
+      selector = aaa_ratio == 1 & aaa_conicalAngle == 20 & aaa_numPorts == 10;
       selector = selector & fOu';
 
-      [X, AI]= sort(aaa_conicalAngle, 'descend');
-      sorted_S = S(:,:,AI,:);
-      sorted_selector = selector(AI);
-      sorted_conicalAngle = aaa_conicalAngle(AI);
-      [worst, port] = max(sorted_S(3:9,2,sorted_selector,:),[],1);
-      worst = squeeze(worst);
-      port = squeeze(port);
-      worstDB = 20*log10(abs(worst));
-      figure(3);
-      imagesc(F(1,:), sorted_conicalAngle(sorted_selector),worstDB);
-      title(sprintf('Worst Isolation Between Port Pairs for %s = %.2f', 'ratio', sel_aaa_ratio));
-      xlabel('Frequency [GHz]');
-      ylabel('Conical Angle [degrees]');
-      h = colorbar();
-      ylabel(h, 'Isolation [dB]');
+      sparams = 20*log10(abs(squeeze(S(:,2,selector,:))));
+      plot(F(selector,:), sparams);
+
+      tot = abs(S(2,2,selector,:)).^2 + ...
+      2*abs(S(3,2,selector,:)).^2 + 2*abs(S(4,2,selector,:)).^2 + ...
+      2*abs(S(5,2,selector,:)).^2 + 2*abs(S(6,2,selector,:)).^2 + abs(S(7,2,selector,:)).^2;
+      tot = abs(1 - squeeze(tot));
+      tot = 10*log10(tot);
+      figure(2);
+      plot(tot);
+
+      %sel_aaa_ratio = set_ratio;
+      %sel_aaa_numPorts = set_numPorts;
+
+      %selector = aaa_ratio == sel_aaa_ratio & aaa_numPorts == sel_aaa_numPorts;
+      %selector = selector & fOu';
+
+      %[X, AI]= sort(aaa_conicalAngle, 'descend');
+      %sorted_S = S(:,:,AI,:);
+      %sorted_selector = selector(AI);
+      %sorted_conicalAngle = aaa_conicalAngle(AI);
+      %[worst, port] = max(sorted_S(3:9,2,sorted_selector,:),[],1);
+      %worst = squeeze(worst);
+      %port = squeeze(port);
+      %worstDB = 20*log10(abs(worst));
+      %figure(2);
+      %imagesc(F(1,:), sorted_conicalAngle(sorted_selector),worstDB);
+      %title(sprintf('Worst Isolation Between Port Pairs for %s = %.2f', 'ratio', sel_aaa_ratio));
+      %xlabel('Frequency [GHz]');
+      %ylabel('Conical Angle [degrees]');
+      %h = colorbar();
+      %ylabel(h, 'Isolation [dB]');
     end
 		%% General methods
 		function obj = Open()
